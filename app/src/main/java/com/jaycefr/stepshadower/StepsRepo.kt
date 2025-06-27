@@ -3,11 +3,9 @@ package com.jaycefr.stepshadower
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.icu.util.TimeUnit
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.fitness.FitnessLocal
 import com.google.android.gms.fitness.data.LocalDataType

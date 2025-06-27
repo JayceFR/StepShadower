@@ -13,9 +13,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -63,42 +65,27 @@ class MainActivity : ComponentActivity() {
                 Log.d("MainActivity", "Permission denied");
             }
         }
-        when{
-            ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED -> {
-                Log.d("MainActivity", "Permission granted");
-                // Subscribe to steps data
-                val localRecordingClient = FitnessLocal.getLocalRecordingClient(this)
-                localRecordingClient.subscribe(LocalDataType.TYPE_STEP_COUNT_DELTA)
-                    .addOnSuccessListener {
-                        Log.d("MainActivity", "Subscribed to steps data");
-                    }
-                    .addOnFailureListener {
-                        Log.w("MainActivity", "Failed to subscribe to steps data");
-                    }
-
-                lifecycleScope.launch {
-
-                }
-
-//                val endTime = LocalDateTime.now().atZone(ZoneId.systemDefault())
-//                val startTime = endTime.minusDays(1)
-//                val readRequest = LocalDataReadRequest.Builder().aggregate(LocalDataType.TYPE_STEP_COUNT_DELTA)
-//                    .bucketByTime(1, TimeUnit.DAYS)
-//                    .setTimeRange(startTime.toEpochSecond(), endTime.toEpochSecond(), TimeUnit.SECONDS)
-//                    .build()
-//
-//                localRecordingClient.readData(readRequest).addOnSuccessListener { response ->
-//                    for (dataset in response.buckets.flatMap { it.dataSets }){
-//                        this.dumpDataSet(dataset);
+//        when{
+//            ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED -> {
+//                Log.d("MainActivity", "Permission granted");
+//                // Subscribe to steps data
+//                val localRecordingClient = FitnessLocal.getLocalRecordingClient(this)
+//                localRecordingClient.subscribe(LocalDataType.TYPE_STEP_COUNT_DELTA)
+//                    .addOnSuccessListener {
+//                        Log.d("MainActivity", "Subscribed to steps data");
 //                    }
-//                }.addOnFailureListener{e -> Log.w("MainActivity", "Failed to read data", e)}
-
-
-
-            }
-            else -> {
-                requestPermissionLauncher.launch(android.Manifest.permission.ACTIVITY_RECOGNITION)
-            }
+//                    .addOnFailureListener {
+//                        Log.w("MainActivity", "Failed to subscribe to steps data");
+//                    }
+//            }
+//            else -> {
+//                requestPermissionLauncher.launch(android.Manifest.permission.ACTIVITY_RECOGNITION)
+//            }
+//        }
+        val repo = StepsRepo(this)
+        val viewModel = StepViewModel(repo)
+        lifecycleScope.launch {
+            viewModel.refresh()
         }
         setContent {
             Column(
@@ -108,6 +95,8 @@ class MainActivity : ComponentActivity() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ){
                 Greeting(name = "Jayce", modifier = Modifier.align(Alignment.CenterHorizontally))
+                Text(text = "Steps taken today = ${viewModel.steps.collectAsState().value}")
+                Button(onClick = {lifecycleScope.launch { viewModel.refresh() }}) { Text("Refresh") }
             }
         }
     }
