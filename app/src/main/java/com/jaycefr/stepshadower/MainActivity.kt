@@ -20,9 +20,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.fitness.FitnessLocal
+import com.google.android.gms.fitness.data.LocalDataSet
+import com.google.android.gms.fitness.data.LocalDataType
+import com.google.android.gms.fitness.request.LocalDataReadRequest
 import com.jaycefr.stepshadower.ui.theme.StepShadowerTheme
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
+
+    fun dumpDataSet(dataSet: LocalDataSet) {
+        Log.i("MainActivity", "Data returned for Data type: ${dataSet.dataType.name}")
+        for (dp in dataSet.dataPoints) {
+            Log.i("MainActivity","Data point:")
+            Log.i("MainActivity","\tType: ${dp.dataType.name}")
+            Log.i("MainActivity","\tStart: ${dp.getStartTime(TimeUnit.HOURS)}")
+            Log.i("MainActivity","\tEnd: ${dp.getEndTime(TimeUnit.HOURS)}")
+            for (field in dp.dataType.fields) {
+                Log.i("MainActivity","\tLocalField: ${field.name.toString()} LocalValue: ${dp.getValue(field)}")
+            }
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +66,35 @@ class MainActivity : ComponentActivity() {
         when{
             ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED -> {
                 Log.d("MainActivity", "Permission granted");
+                // Subscribe to steps data
+                val localRecordingClient = FitnessLocal.getLocalRecordingClient(this)
+                localRecordingClient.subscribe(LocalDataType.TYPE_STEP_COUNT_DELTA)
+                    .addOnSuccessListener {
+                        Log.d("MainActivity", "Subscribed to steps data");
+                    }
+                    .addOnFailureListener {
+                        Log.w("MainActivity", "Failed to subscribe to steps data");
+                    }
+
+                lifecycleScope.launch {
+
+                }
+
+//                val endTime = LocalDateTime.now().atZone(ZoneId.systemDefault())
+//                val startTime = endTime.minusDays(1)
+//                val readRequest = LocalDataReadRequest.Builder().aggregate(LocalDataType.TYPE_STEP_COUNT_DELTA)
+//                    .bucketByTime(1, TimeUnit.DAYS)
+//                    .setTimeRange(startTime.toEpochSecond(), endTime.toEpochSecond(), TimeUnit.SECONDS)
+//                    .build()
+//
+//                localRecordingClient.readData(readRequest).addOnSuccessListener { response ->
+//                    for (dataset in response.buckets.flatMap { it.dataSets }){
+//                        this.dumpDataSet(dataset);
+//                    }
+//                }.addOnFailureListener{e -> Log.w("MainActivity", "Failed to read data", e)}
+
+
+
             }
             else -> {
                 requestPermissionLauncher.launch(android.Manifest.permission.ACTIVITY_RECOGNITION)
