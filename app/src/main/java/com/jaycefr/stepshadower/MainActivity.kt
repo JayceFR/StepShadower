@@ -40,20 +40,7 @@ import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
-
-    fun dumpDataSet(dataSet: LocalDataSet) {
-        Log.i("MainActivity", "Data returned for Data type: ${dataSet.dataType.name}")
-        for (dp in dataSet.dataPoints) {
-            Log.i("MainActivity","Data point:")
-            Log.i("MainActivity","\tType: ${dp.dataType.name}")
-            Log.i("MainActivity","\tStart: ${dp.getStartTime(TimeUnit.HOURS)}")
-            Log.i("MainActivity","\tEnd: ${dp.getEndTime(TimeUnit.HOURS)}")
-            for (field in dp.dataType.fields) {
-                Log.i("MainActivity","\tLocalField: ${field.name.toString()} LocalValue: ${dp.getValue(field)}")
-            }
-        }
-    }
-
+    
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,7 +83,7 @@ fun StepPage(appContext : Context){
         }
     }
 
-    val viewModel = remember { StepViewModel(repo) } 
+    val viewModel = remember { StepViewModel(repo) }
     Column(
         modifier = Modifier.fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background),
