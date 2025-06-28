@@ -1,10 +1,13 @@
 package com.jaycefr.stepshadower
 
+import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,7 +20,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,51 +58,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Ask for permission
-        val requestPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ){
-            isGranted ->
-            if (isGranted){
-                Log.d("MainActivity", "Permission granted");
-            }
-            else{
-                Log.d("MainActivity", "Permission denied");
-            }
-        }
-//        when{
-//            ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED -> {
-//                Log.d("MainActivity", "Permission granted");
-//                // Subscribe to steps data
-//                val localRecordingClient = FitnessLocal.getLocalRecordingClient(this)
-//                localRecordingClient.subscribe(LocalDataType.TYPE_STEP_COUNT_DELTA)
-//                    .addOnSuccessListener {
-//                        Log.d("MainActivity", "Subscribed to steps data");
-//                    }
-//                    .addOnFailureListener {
-//                        Log.w("MainActivity", "Failed to subscribe to steps data");
-//                    }
-//            }
-//            else -> {
-//                requestPermissionLauncher.launch(android.Manifest.permission.ACTIVITY_RECOGNITION)
-//            }
-//        }
-        val repo = StepsRepo(this)
-        val viewModel = StepViewModel(repo)
-        lifecycleScope.launch {
-            viewModel.refresh()
-        }
         setContent {
-            Column(
-                modifier = Modifier.fillMaxSize()
-                    .background(color = MaterialTheme.colorScheme.background),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ){
-                Greeting(name = "Jayce", modifier = Modifier.align(Alignment.CenterHorizontally))
-                Text(text = "Steps taken today = ${viewModel.steps.collectAsState().value}")
-                Button(onClick = {lifecycleScope.launch { viewModel.refresh() }}) { Text("Refresh") }
-            }
+            StepPage(this.applicationContext)
         }
     }
 }
@@ -108,6 +70,42 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         text = "Hello $name!",
         modifier = modifier
     )
+}
+
+@RequiresApi(Build.VERSION_CODES.Q)
+@Composable
+fun StepPage(appContext : Context){
+    val repo = remember { StepsRepo(appContext) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted){
+            repo.ensureSubscription()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(
+                appContext,
+                Manifest.permission.ACTIVITY_RECOGNITION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            repo.ensureSubscription()
+        } else {
+            permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+        }
+    }
+
+    val viewModel = remember { StepViewModel(repo) } 
+    Column(
+        modifier = Modifier.fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Greeting(name = "Jayce", modifier = Modifier.align(Alignment.CenterHorizontally))
+        Text(text = "Steps taken today = ${viewModel.steps.collectAsState().value}")
+    }
 }
 
 @Preview(showBackground = true)
