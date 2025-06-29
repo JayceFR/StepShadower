@@ -22,9 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -33,6 +35,7 @@ import com.google.android.gms.fitness.data.LocalDataSet
 import com.google.android.gms.fitness.data.LocalDataType
 import com.google.android.gms.fitness.request.LocalDataReadRequest
 import com.jaycefr.stepshadower.ui.theme.StepShadowerTheme
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,7 +43,7 @@ import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
-    
+
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,54 +54,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
 @RequiresApi(Build.VERSION_CODES.Q)
-@Composable
-fun StepPage(appContext : Context){
-    val repo = remember { StepsRepo(appContext) }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted){
-            repo.ensureSubscription()
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(
-                appContext,
-                Manifest.permission.ACTIVITY_RECOGNITION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            repo.ensureSubscription()
-        } else {
-            permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
-        }
-    }
-
-    val viewModel = remember { StepViewModel(repo) }
-    Column(
-        modifier = Modifier.fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.background),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        Greeting(name = "Jayce", modifier = Modifier.align(Alignment.CenterHorizontally))
-        Text(text = "Steps taken today = ${viewModel.steps.collectAsState().value}")
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     StepShadowerTheme {
-        Greeting("Android")
+        StepPage(LocalContext.current)
     }
 }

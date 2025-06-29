@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -68,5 +69,9 @@ dependencies {
 
     // Custom added implementations
     // Step counter
-    implementation("com.google.android.gms:play-services-fitness:21.2.0")
+    implementation(libs.play.services.fitness)
+    // Room database
+    val roomVersion = "2.7.2"
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
 }
