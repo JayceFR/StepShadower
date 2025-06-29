@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.room.Room
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {

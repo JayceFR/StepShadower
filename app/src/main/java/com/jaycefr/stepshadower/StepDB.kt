@@ -6,9 +6,11 @@ import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.Update
 
 /*
 Usage
@@ -37,22 +39,25 @@ data class Step(
 @Dao
 interface StepDAO{
     @Query("Select * FROM step")
-    fun getAll() : List<Step>
+    suspend fun getAll() : List<Step>
 
     @Query("Select * FROM step WHERE date = :date")
-    fun getStepByDate(date : Int) : Step
+    suspend fun getStepByDate(date : Int) : Step?
 
     @Query("UPDATE step SET step = :step WHERE date = :date")
-    fun updateStep(date : Int, step : Int)
+    suspend fun updateStep(date : Int, step : Int)
 
     @Query("INSERT INTO step (date, step) VALUES (:date, :step)")
-    fun insertStep(date : Int, step : Int)
+    suspend fun insertStep(date : Int, step : Int)
 
-    @Insert
-    fun insertAll(vararg steps : Step)
+    @Update
+    suspend fun update(step: Step)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(vararg steps : Step) : List<Long>
 
     @Delete
-    fun delete(step : Step)
+    suspend fun delete(step : Step)
 
 }
 

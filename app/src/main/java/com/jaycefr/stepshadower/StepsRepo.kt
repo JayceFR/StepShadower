@@ -9,13 +9,17 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
+import androidx.compose.runtime.remember
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.room.Room
 import com.google.android.gms.fitness.FitnessLocal
 import com.google.android.gms.fitness.data.LocalDataType
 import com.google.android.gms.fitness.request.LocalDataReadRequest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -25,6 +29,11 @@ import kotlin.coroutines.resumeWithException
 @RequiresApi(Build.VERSION_CODES.Q)
 class StepsRepo(private val appContext : Context){
     private val client = FitnessLocal.getLocalRecordingClient(appContext)
+    private val db : AppDatabase = Room.databaseBuilder(
+        appContext,
+        AppDatabase::class.java, "stepsDB"
+    ).build();
+    private val stepsDao : StepDAO = db.stepDao();
 
     fun ensureSubscription() {
         if (
@@ -38,6 +47,14 @@ class StepsRepo(private val appContext : Context){
                 .addOnFailureListener { e -> Log.w("StepsRepo", "Subscription failed", e) }
         } else {
             Log.w("StepsRepo", "ACTIVITY_RECOGNITION permission NOT granted")
+        }
+    }
+
+    suspend fun updateDBSteps(steps : Int) = withContext(Dispatchers.IO) {
+        val today : Int = LocalDate.now().toEpochDay().toInt()
+        val inserted = stepsDao.insertAll(Step(today, steps))
+        if (inserted[0] == -1L) {                    // row existed → update
+            stepsDao.update(Step(today, steps))
         }
     }
 
