@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.UserHandle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
@@ -59,6 +60,7 @@ class AdminReceiver : DeviceAdminReceiver(){
 
         if (failedCount >= 3){
             Toast.makeText(context, "3 failed attempts detected", Toast.LENGTH_SHORT).show()
+            Log.d("AdminReceiver", "3 failed attempts detected")
             showNotification(context, "3 failed attempts detected")
         }
 

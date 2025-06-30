@@ -51,6 +51,18 @@ fun StepPage(appContext : Context){
         } else {
             permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
         }
+
+        // Notification permission
+        if (ContextCompat.checkSelfPermission(
+                appContext,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
     }
 
     val viewModel = remember { StepViewModel(repo) }
