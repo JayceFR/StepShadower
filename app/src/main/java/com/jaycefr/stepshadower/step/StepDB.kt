@@ -1,4 +1,4 @@
-package com.jaycefr.stepshadower
+package com.jaycefr.stepshadower.step
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao

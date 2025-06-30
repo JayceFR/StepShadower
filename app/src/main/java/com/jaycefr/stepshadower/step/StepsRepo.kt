@@ -1,16 +1,11 @@
-package com.jaycefr.stepshadower
+package com.jaycefr.stepshadower.step
 
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.annotation.RequiresPermission
-import androidx.compose.runtime.remember
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.room.Room
 import com.google.android.gms.fitness.FitnessLocal
@@ -23,6 +18,7 @@ import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
 
 // Make sure to check for permissions before creating an instance.
@@ -66,7 +62,7 @@ class StepsRepo(private val appContext : Context){
 
         val request = LocalDataReadRequest.Builder()
             .read(LocalDataType.TYPE_STEP_COUNT_DELTA)
-            .setTimeRange(start, end, java.util.concurrent.TimeUnit.SECONDS)
+            .setTimeRange(start, end, TimeUnit.SECONDS)
             .build()
 
         return suspendCancellableCoroutine { cont ->

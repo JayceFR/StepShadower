@@ -1,4 +1,4 @@
-package com.jaycefr.stepshadower
+package com.jaycefr.stepshadower.step
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -25,7 +25,7 @@ class StepViewModel (
     }
 
     private suspend fun refresh(){
-        steps.value = kotlin.runCatching { repo.todaySteps() }.getOrDefault(0)
+        steps.value = runCatching { repo.todaySteps() }.getOrDefault(0)
     }
 
 }
