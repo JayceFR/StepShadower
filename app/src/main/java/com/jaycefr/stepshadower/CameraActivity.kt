@@ -1,68 +1,47 @@
 package com.jaycefr.stepshadower
 
-import android.icu.text.SimpleDateFormat
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
-import androidx.compose.ui.text.intl.Locale
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class CameraActivity : ComponentActivity() {
 
-    private lateinit var outputDirectory : File
-
+    private lateinit var outputDirectory: File
     private lateinit var imageCapture: ImageCapture
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
-
-//        window.setBackgroundDrawableResource(android.R.color.transparent)
-        setContentView(R.layout.activity_camera)
+        // Make transparent
+        window.setBackgroundDrawableResource(android.R.color.transparent)
 
         outputDirectory = getOutputDirectory()
 
         startCapture()
-
-//        Handler(Looper.getMainLooper()).postDelayed({
-//            finish()
-//        }, 2000)
     }
 
-    private fun getOutputDirectory() : File {
+    private fun getOutputDirectory(): File {
         val mediaDir = externalMediaDirs.firstOrNull()?.let {
             File(it, "captured").apply { mkdirs() }
         }
-        return if (mediaDir != null && mediaDir.exists())
-            mediaDir else filesDir
+        return if (mediaDir != null && mediaDir.exists()) mediaDir else filesDir
     }
 
-    private fun startCapture(){
-        Log.d("CameraActivity", "Starting camera capture...")
+    private fun startCapture() {
+        Log.d(TAG, "Starting camera capture...")
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener({
-            val cameraProvider : ProcessCameraProvider = cameraProviderFuture.get()
-
-            val preview = androidx.camera.core.Preview.Builder().build()
-                .also {
-                    it.surfaceProvider = findViewById<PreviewView>(R.id.previewView).surfaceProvider
-                }
+            val cameraProvider = cameraProviderFuture.get()
 
             imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
@@ -73,18 +52,17 @@ class CameraActivity : ComponentActivity() {
 
             try {
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
-                Log.d("CameraActivity", "Camera started")
+                cameraProvider.bindToLifecycle(this, cameraSelector, imageCapture)
+                Log.d(TAG, "Camera bound")
 
-                val previewView = findViewById<PreviewView>(R.id.previewView)
-                previewView.postDelayed({
+                window.decorView.postDelayed({
                     takePhoto()
                 }, 500)
 
-            } catch (e : Exception){
-                Log.e("CameraActivity", "Use case binding failed", e)
+            } catch (e: Exception) {
+                Log.e(TAG, "Use case binding failed", e)
+                finish()
             }
-
 
         }, ContextCompat.getMainExecutor(this))
     }
@@ -92,7 +70,7 @@ class CameraActivity : ComponentActivity() {
     private fun takePhoto() {
         val photoFile = File(
             outputDirectory,
-            java.text.SimpleDateFormat(FILENAME_FORMAT, java.util.Locale.UK)
+            SimpleDateFormat(FILENAME_FORMAT, Locale.UK)
                 .format(System.currentTimeMillis()) + ".jpg"
         )
 
@@ -108,11 +86,10 @@ class CameraActivity : ComponentActivity() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    Toast.makeText(this@CameraActivity, "Photo captured", Toast.LENGTH_SHORT).show()
                     Log.d(TAG, "Photo saved: ${photoFile.absolutePath}")
-                    Toast.makeText(baseContext, "Photo saved", Toast.LENGTH_SHORT).show()
                     finish()
                 }
-
             }
         )
     }
