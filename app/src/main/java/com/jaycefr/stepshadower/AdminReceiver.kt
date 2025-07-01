@@ -12,6 +12,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
@@ -48,6 +49,8 @@ class AdminReceiver : DeviceAdminReceiver(){
 
     }
 
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onPasswordFailed(
         context: Context,
         intent: Intent,
@@ -62,6 +65,10 @@ class AdminReceiver : DeviceAdminReceiver(){
             Toast.makeText(context, "3 failed attempts detected", Toast.LENGTH_SHORT).show()
             Log.d("AdminReceiver", "3 failed attempts detected")
             showNotification(context, "3 failed attempts detected")
+
+            val unlockEvent = Intent(context, UnlockListenerService::class.java)
+            context.startForegroundService(unlockEvent)
+
         }
 
         super.onPasswordFailed(context, intent, user)

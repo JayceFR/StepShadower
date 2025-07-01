@@ -63,6 +63,35 @@ fun StepPage(appContext : Context){
             }
         }
 
+        // Foreground permission
+        if (ContextCompat.checkSelfPermission(
+                appContext,
+                Manifest.permission.FOREGROUND_SERVICE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionLauncher.launch(Manifest.permission.FOREGROUND_SERVICE)
+        }
+
+        // Camera permission
+        if (ContextCompat.checkSelfPermission(
+                appContext,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+
+        // Foreground service camera permission
+        if (ContextCompat.checkSelfPermission(
+                appContext,
+                Manifest.permission.FOREGROUND_SERVICE_CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                permissionLauncher.launch(Manifest.permission.FOREGROUND_SERVICE_CAMERA)
+            }
+        }
+
     }
 
     val viewModel = remember { StepViewModel(repo) }
