@@ -18,11 +18,16 @@ class UnlockListenerService : Service() {
 
     private lateinit var receiver: BroadcastReceiver
 
+    private var isRegistered = false
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == Intent.ACTION_USER_PRESENT) {
-                    unregisterReceiver(this)
+                    if (isRegistered) {
+                        unregisterReceiver(this)
+                        isRegistered = false
+                    }
                     launchCameraActivity()
                     stopSelf()
                 }
@@ -31,10 +36,10 @@ class UnlockListenerService : Service() {
 
         val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
         registerReceiver(receiver, filter)
+        isRegistered = true
 
         Log.d("UnlockListenerService", "Service started")
 
-        // **THIS IS CRUCIAL:**
         startForeground(1, buildNotification("Waiting for unlock to take photo"))
 
         return START_STICKY
@@ -42,7 +47,10 @@ class UnlockListenerService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(receiver)
+        if (isRegistered) {
+            unregisterReceiver(receiver)
+            isRegistered = false
+        }
     }
 
     private fun launchCameraActivity() {
