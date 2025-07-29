@@ -14,6 +14,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
+import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 
@@ -66,9 +67,15 @@ class AdminReceiver : DeviceAdminReceiver(){
             Log.d("AdminReceiver", "3 failed attempts detected")
             showNotification(context, "3 failed attempts detected")
 
-            val unlockEvent = Intent(context, UnlockListenerService::class.java)
-            context.startForegroundService(unlockEvent)
+//            val unlockEvent = Intent(context, UnlockListenerService::class.java)
+//            context.startForegroundService(unlockEvent)
 
+            val camIntent = Intent(context, CameraActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(camIntent)
+
+            prefs.edit { putInt("count", 0) }
         }
 
         super.onPasswordFailed(context, intent, user)

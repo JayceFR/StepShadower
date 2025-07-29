@@ -36,8 +36,14 @@
             </intent-filter>
         </activity>
         <activity android:name=".CameraActivity"
+            android:exported="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
-
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+            </intent-filter>
         </activity>
         <receiver
             android:name=".AdminReceiver"
