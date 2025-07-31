@@ -70,10 +70,14 @@ class AdminReceiver : DeviceAdminReceiver(){
 //            val unlockEvent = Intent(context, UnlockListenerService::class.java)
 //            context.startForegroundService(unlockEvent)
 
-            val camIntent = Intent(context, CameraActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(camIntent)
+//            val camIntent = Intent(context, CameraActivity::class.java).apply {
+//                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//            }
+//            context.startActivity(camIntent)
+
+            val serviceIntent = Intent(context, LockWatchService::class.java)
+            context.startForegroundService(serviceIntent)
+
 
             prefs.edit { putInt("count", 0) }
         }
