@@ -114,6 +114,7 @@ class LockWatchService : LifecycleService(){
                                         val body = locationText
                                         val photoFile = File(photoFile.absolutePath)
                                         sendEmail(gmailUser, appPassword, toEmail, subject, body, photoFile)
+                                        stopSelf()
                                     }
                                     else{
                                         Log.d("Lockwatch", "Location not found")
