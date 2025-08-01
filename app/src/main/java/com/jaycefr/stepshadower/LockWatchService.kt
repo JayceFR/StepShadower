@@ -18,9 +18,22 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleService
-import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import android.os.StrictMode
+import java.util.Properties
+import javax.mail.Authenticator
+import javax.mail.Message
+import javax.mail.PasswordAuthentication
+import javax.mail.Session
+import javax.mail.Transport
+import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeMessage
+import javax.mail.internet.MimeMultipart
+import javax.mail.internet.MimeBodyPart
+import java.io.File
+import javax.activation.DataHandler
+import javax.activation.FileDataSource
 
 class LockWatchService : LifecycleService(){
     private lateinit var cameraExecutor: ExecutorService
@@ -77,7 +90,14 @@ class LockWatchService : LifecycleService(){
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                         Log.d("Lockwatch", "Photo Saved : ${photoFile.absolutePath}")
-
+                        // Send the email here
+                        val gmailUser = "jaycejefferson.vicious@gmail.com"
+                        val appPassword = "oeml jwrb ngdd gsfd"
+                        val toEmail = "jaycejefferson31@gmail.com"
+                        val subject = "Photo from your device"
+                        val body = "Attached is the photo taken by your device."
+                        val photoFile = File(photoFile.absolutePath)
+                        sendEmail(gmailUser, appPassword, toEmail, subject, body, photoFile)
                     }
 
                     override fun onError(exception: ImageCaptureException) {
@@ -86,6 +106,64 @@ class LockWatchService : LifecycleService(){
                     }
                 })
         }, ContextCompat.getMainExecutor(this))
+    }
+
+    fun sendEmail(
+        userEmail: String,
+        userPassword: String,
+        toEmail: String,
+        subject: String,
+        bodyText: String,
+        attachmentFile: File? = null
+    ) {
+        Thread {
+            try {
+                val props = Properties().apply {
+                    put("mail.smtp.host", "smtp.gmail.com")
+                    put("mail.smtp.port", "587")
+                    put("mail.smtp.auth", "true")
+                    put("mail.smtp.starttls.enable", "true")
+                }
+
+                val session = Session.getInstance(props, object : Authenticator() {
+                    override fun getPasswordAuthentication(): PasswordAuthentication {
+                        return PasswordAuthentication(userEmail, userPassword)
+                    }
+                })
+
+                val message = MimeMessage(session).apply {
+                    setFrom(InternetAddress(userEmail))
+                    setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail))
+                    setSubject(subject)
+
+                    if (attachmentFile != null && attachmentFile.exists()) {
+                        val multipart = MimeMultipart()
+
+                        // Body part
+                        val textPart = MimeBodyPart().apply {
+                            setText(bodyText)
+                        }
+                        multipart.addBodyPart(textPart)
+
+                        // Attachment part
+                        val attachmentPart = MimeBodyPart().apply {
+                            dataHandler = DataHandler(FileDataSource(attachmentFile))
+                            fileName = attachmentFile.name
+                        }
+                        multipart.addBodyPart(attachmentPart)
+
+                        setContent(multipart)
+                    } else {
+                        setText(bodyText)
+                    }
+                }
+                Transport.send(message)
+                println("Email sent successfully")
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
     }
 
     override fun onDestroy() {

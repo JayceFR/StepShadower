@@ -92,6 +92,15 @@ fun StepPage(appContext : Context){
             }
         }
 
+        // Internet permission
+        if (ContextCompat.checkSelfPermission(
+                appContext,
+                Manifest.permission.INTERNET
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionLauncher.launch(Manifest.permission.INTERNET)
+        }
+
     }
 
     val viewModel = remember { StepViewModel(repo) }
