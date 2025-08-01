@@ -101,6 +101,26 @@ fun StepPage(appContext : Context){
             permissionLauncher.launch(Manifest.permission.INTERNET)
         }
 
+        // Location permission
+        if (ContextCompat.checkSelfPermission(
+                appContext,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        // Background location permission
+        if (ContextCompat.checkSelfPermission(
+                appContext,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+
+
+
     }
 
     val viewModel = remember { StepViewModel(repo) }

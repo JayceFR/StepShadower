@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -34,6 +35,8 @@ import javax.mail.internet.MimeBodyPart
 import java.io.File
 import javax.activation.DataHandler
 import javax.activation.FileDataSource
+import com.google.android.gms.location.LocationServices
+import java.util.jar.Manifest
 
 class LockWatchService : LifecycleService(){
     private lateinit var cameraExecutor: ExecutorService
@@ -90,14 +93,37 @@ class LockWatchService : LifecycleService(){
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                         Log.d("Lockwatch", "Photo Saved : ${photoFile.absolutePath}")
-                        // Send the email here
-                        val gmailUser = "jaycejefferson.vicious@gmail.com"
-                        val appPassword = "oeml jwrb ngdd gsfd"
-                        val toEmail = "jaycejefferson31@gmail.com"
-                        val subject = "Photo from your device"
-                        val body = "Attached is the photo taken by your device."
-                        val photoFile = File(photoFile.absolutePath)
-                        sendEmail(gmailUser, appPassword, toEmail, subject, body, photoFile)
+
+                        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
+                        if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                            fusedLocationClient.lastLocation
+                                .addOnSuccessListener { location ->
+                                    if (location != null) {
+                                        val lat = location.latitude
+                                        val lon = location.longitude
+                                        val locationText = """
+                                            Latitude : $lat 
+                                            Longitude : $lon
+                                            https://maps.google.com/?q=$lat,$lon
+                                        """.trimIndent()
+                                        // Send the email here
+                                        val gmailUser = "jaycejefferson.vicious@gmail.com"
+                                        val appPassword = "oeml jwrb ngdd gsfd"
+                                        val toEmail = "jaycejefferson31@gmail.com"
+                                        val subject = "Intruder"
+                                        val body = locationText
+                                        val photoFile = File(photoFile.absolutePath)
+                                        sendEmail(gmailUser, appPassword, toEmail, subject, body, photoFile)
+                                    }
+                                    else{
+                                        Log.d("Lockwatch", "Location not found")
+                                    }
+                                }
+                        }
+                        else{
+                            Log.d("Lockwatch", "Location permission not granted")
+                        }
+
                     }
 
                     override fun onError(exception: ImageCaptureException) {
