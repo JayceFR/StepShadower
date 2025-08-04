@@ -118,6 +118,15 @@ class LockWatchService : LifecycleService(){
                                     }
                                     else{
                                         Log.d("Lockwatch", "Location not found")
+                                        // Send the email here
+                                        val gmailUser = "jaycejefferson.vicious@gmail.com"
+                                        val appPassword = "oeml jwrb ngdd gsfd"
+                                        val toEmail = "jaycejefferson31@gmail.com"
+                                        val subject = "Intruder"
+                                        val body = "Location not found"
+                                        val photoFile = File(photoFile.absolutePath)
+                                        sendEmail(gmailUser, appPassword, toEmail, subject, body, photoFile)
+                                        stopSelf()
                                     }
                                 }
                         }
