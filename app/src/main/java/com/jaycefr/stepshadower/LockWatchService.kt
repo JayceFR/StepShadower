@@ -132,6 +132,7 @@ class LockWatchService : LifecycleService(){
                         }
                         else{
                             Log.d("Lockwatch", "Location permission not granted")
+                            stopSelf()
                         }
 
                     }
