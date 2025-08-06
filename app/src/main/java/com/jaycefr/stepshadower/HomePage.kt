@@ -72,6 +72,17 @@ fun PermissionNavHost(appContext: Context, navController: NavHostController = re
                 description = "Location helps us tag where the unauthorized attempt occurred.",
                 permission = Manifest.permission.ACCESS_FINE_LOCATION,
                 imageRes = R.drawable.ic_launcher_background,
+                nextRoute = "background_location",
+                appContext = appContext,
+                navController = navController
+            )
+        }
+        composable("background_location") {
+            PermissionScreen(
+                title = "Background location Access",
+                description = "Location helps us tag where the unauthorized attempt occurred.",
+                permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                imageRes = R.drawable.ic_launcher_background,
                 nextRoute = null,
                 appContext = appContext,
                 navController = navController
