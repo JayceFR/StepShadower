@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,107 +28,122 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.jaycefr.stepshadower.step.Greeting
 import com.jaycefr.stepshadower.step.StepViewModel
 import com.jaycefr.stepshadower.step.StepsRepo
 import kotlin.collections.emptyList
 
-@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
-fun HomePage(appContext: Context) {
-    val permissionStates = remember {
-        mutableStateMapOf<String, Boolean>()
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        results.forEach { (permission, granted) ->
-            permissionStates[permission] = granted
+fun PermissionNavHost(appContext: Context, navController: NavHostController = rememberNavController()) {
+    NavHost(navController, startDestination = "camera") {
+        composable("camera") {
+            PermissionScreen(
+                title = "Camera Access",
+                description = "We use your camera to take a picture of intruders.",
+                permission = Manifest.permission.CAMERA,
+                imageRes = R.drawable.ic_launcher_background,
+                nextRoute = "notifications",
+                appContext = appContext,
+                navController = navController
+            )
+        }
+        composable("notifications") {
+            PermissionScreen(
+                title = "Notification Access",
+                description = "We use notifications to alert you when someone tries to break in.",
+                permission = Manifest.permission.POST_NOTIFICATIONS,
+                imageRes = R.drawable.ic_launcher_background,
+                nextRoute = "location",
+                appContext = appContext,
+                navController = navController
+            )
+        }
+        composable("location") {
+            PermissionScreen(
+                title = "Location Access",
+                description = "Location helps us tag where the unauthorized attempt occurred.",
+                permission = Manifest.permission.ACCESS_FINE_LOCATION,
+                imageRes = R.drawable.ic_launcher_background,
+                nextRoute = null,
+                appContext = appContext,
+                navController = navController
+            )
         }
     }
+}
 
-    // Dynamically compute permissions to request
-    val permissionsToRequest = buildList {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(appContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            add(Manifest.permission.POST_NOTIFICATIONS)
+@Composable
+fun PermissionScreen(
+    title: String,
+    description: String,
+    permission: String,
+    imageRes: Int,
+    nextRoute: String?,
+    appContext: Context,
+    navController: NavController
+) {
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            nextRoute?.let { navController.navigate(it) }
+        } else {
+            // Optional: show a dialog or allow retry
         }
+    }
 
-        if (ContextCompat.checkSelfPermission(appContext, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            add(Manifest.permission.CAMERA)
+    val alreadyGranted = ContextCompat.checkSelfPermission(appContext, permission) == PackageManager.PERMISSION_GRANTED
+
+    LaunchedEffect(Unit) {
+        if (alreadyGranted) {
+            nextRoute?.let { navController.navigate(it) }
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-            ContextCompat.checkSelfPermission(appContext, Manifest.permission.FOREGROUND_SERVICE_CAMERA) != PackageManager.PERMISSION_GRANTED
-        ) {
-            add(Manifest.permission.FOREGROUND_SERVICE_CAMERA)
-        }
-
-        if (ContextCompat.checkSelfPermission(appContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            add(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-        // DO NOT include ACCESS_BACKGROUND_LOCATION here
-    }.toMutableList()
-
-    val backgroundLocationGranted = ContextCompat.checkSelfPermission(
-        appContext,
-        Manifest.permission.ACCESS_BACKGROUND_LOCATION
-    ) == PackageManager.PERMISSION_GRANTED
-
-    val allMainPermissionsGranted = permissionsToRequest.isEmpty()
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        Text(
-            text = "Permissions Required",
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = null,
+            modifier = Modifier.size(200.dp)
         )
 
-        if (allMainPermissionsGranted && backgroundLocationGranted) {
-            Text(
-                text = "All necessary permissions are granted!",
-                color = Color.Green
-            )
-        } else {
-            Text(
-                text = "To use the app fully, we need access to:",
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+        Spacer(modifier = Modifier.height(24.dp))
 
-//            if (!backgroundLocationGranted){
-//                permissionsToRequest.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-//            }
-            PermissionExplanationList(
-                permissionsToRequest.plus(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            )
+        Text(title, style = MaterialTheme.typography.headlineMedium)
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = {
-                Log.d("HomePage", "Requesting permissions: $permissionsToRequest")
-                if (permissionsToRequest.isNotEmpty()) {
-                    permissionLauncher.launch(permissionsToRequest.toTypedArray())
-                } else if (!backgroundLocationGranted) {
-                    // Request background location separately
-                    permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
-                }
-            }) {
-                Text("Enable Permissions")
-            }
+        Text(description, style = MaterialTheme.typography.bodyLarge)
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(onClick = {
+            launcher.launch(permission)
+        }) {
+            Text("Allow & Continue")
         }
     }
+}
+
+
+@RequiresApi(Build.VERSION_CODES.Q)
+@Composable
+fun HomePage(appContext: Context) {
+    PermissionNavHost(appContext)
 }
 
 

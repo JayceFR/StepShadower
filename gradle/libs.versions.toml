@@ -13,6 +13,8 @@ playServicesFitness = "21.2.0"
 roomVersion = "2.7.2"
 appcompat = "1.7.1"
 lifecycleService = "2.9.2"
+navigationRuntimeAndroid = "2.9.3"
+navigationComposeJvmstubs = "2.9.3"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCamera2" }
@@ -38,6 +40,9 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 play-services-fitness = { module = "com.google.android.gms:play-services-fitness", version.ref = "playServicesFitness" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "lifecycleService" }
+androidx-navigation-runtime-android = { group = "androidx.navigation", name = "navigation-runtime-android", version.ref = "navigationRuntimeAndroid" }
+androidx-navigation-compose-jvmstubs = { group = "androidx.navigation", name = "navigation-compose-jvmstubs", version.ref = "navigationComposeJvmstubs" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version = "2.9.3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
