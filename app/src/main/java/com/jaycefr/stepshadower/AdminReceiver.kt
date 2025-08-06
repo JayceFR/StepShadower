@@ -56,7 +56,6 @@ class AdminReceiver : DeviceAdminReceiver(){
         intent: Intent,
         user: UserHandle
     ) {
-//        Toast.makeText(context, "Wrong password", Toast.LENGTH_SHORT).show()
         val prefs = context.getSharedPreferences("failed_attempts", Context.MODE_PRIVATE)
         val failedCount = prefs.getInt("count", 0) + 1
         prefs.edit { putInt("count", failedCount) }
@@ -65,14 +64,6 @@ class AdminReceiver : DeviceAdminReceiver(){
             Toast.makeText(context, "3 failed attempts detected", Toast.LENGTH_SHORT).show()
             Log.d("AdminReceiver", "3 failed attempts detected")
             showNotification(context, "3 failed attempts detected")
-
-//            val unlockEvent = Intent(context, UnlockListenerService::class.java)
-//            context.startForegroundService(unlockEvent)
-
-//            val camIntent = Intent(context, CameraActivity::class.java).apply {
-//                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//            }
-//            context.startActivity(camIntent)
 
             val serviceIntent = Intent(context, LockWatchService::class.java)
             context.startForegroundService(serviceIntent)
