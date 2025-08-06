@@ -43,6 +43,7 @@ androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-s
 androidx-navigation-runtime-android = { group = "androidx.navigation", name = "navigation-runtime-android", version.ref = "navigationRuntimeAndroid" }
 androidx-navigation-compose-jvmstubs = { group = "androidx.navigation", name = "navigation-compose-jvmstubs", version.ref = "navigationComposeJvmstubs" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version = "2.9.3" }
+lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version = "6.1.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

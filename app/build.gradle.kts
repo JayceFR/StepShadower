@@ -98,5 +98,6 @@ dependencies {
     // Location
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
-
+    // Lottie animation
+    implementation(libs.lottie.compose)
 }
