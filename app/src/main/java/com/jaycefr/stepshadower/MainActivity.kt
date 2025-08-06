@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
         val filter = IntentFilter(Intent.ACTION_SHUTDOWN)
         registerReceiver(shutDownReceiver, filter)
         setContent {
-            StepPage(this.applicationContext)
+            HomePage(this.applicationContext)
         }
     }
 }
@@ -71,6 +71,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     StepShadowerTheme {
-        StepPage(LocalContext.current)
+        HomePage(LocalContext.current)
     }
 }
