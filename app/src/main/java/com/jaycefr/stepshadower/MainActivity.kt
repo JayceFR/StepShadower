@@ -4,6 +4,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -23,6 +24,8 @@ import com.jaycefr.stepshadower.ui.theme.StepShadowerTheme
 class MainActivity : ComponentActivity() {
 
     private lateinit var enableAdminReceiver: ActivityResultLauncher<Intent>
+
+    private var shutDownReceiver : ShutDownReceiver? = null
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +57,9 @@ class MainActivity : ComponentActivity() {
             enableAdminReceiver.launch(intent)
         }
 
+        shutDownReceiver = ShutDownReceiver()
+        val filter = IntentFilter(Intent.ACTION_SHUTDOWN)
+        registerReceiver(shutDownReceiver, filter)
         setContent {
             StepPage(this.applicationContext)
         }

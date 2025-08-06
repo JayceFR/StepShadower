@@ -50,7 +50,6 @@ class AdminReceiver : DeviceAdminReceiver(){
 
     }
 
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onPasswordFailed(
         context: Context,
