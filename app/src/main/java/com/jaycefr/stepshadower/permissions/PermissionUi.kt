@@ -1,6 +1,5 @@
 package com.jaycefr.stepshadower.permissions
 
-import com.jaycefr.stepshadower.ShowCheckAnimation
 
 import android.app.Activity
 import android.content.Context
@@ -10,6 +9,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -41,7 +41,9 @@ import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.jaycefr.stepshadower.R
 import kotlinx.coroutines.delay
 
 @Composable
@@ -160,5 +162,26 @@ fun PermissionScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ShowCheckAnimation() {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.checkmark))
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = 1
+    )
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
+    ) {
+        LottieAnimation(
+            composition = composition,
+            progress = { progress },
+            modifier = Modifier.size(150.dp)
+        )
     }
 }
