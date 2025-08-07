@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,56 +50,6 @@ import com.jaycefr.stepshadower.step.StepViewModel
 import com.jaycefr.stepshadower.step.StepsRepo
 import kotlinx.coroutines.delay
 import kotlin.collections.emptyList
-
-@Composable
-fun PermissionNavHost(appContext: Context, navController: NavHostController = rememberNavController()) {
-    NavHost(navController, startDestination = "camera") {
-        composable("camera") {
-            PermissionScreen(
-                title = "Camera Access",
-                description = "We use your camera to take a picture of intruders.",
-                permission = Manifest.permission.CAMERA,
-                imageRes = R.raw.camera,
-                nextRoute = "notifications",
-                appContext = appContext,
-                navController = navController
-            )
-        }
-        composable("notifications") {
-            PermissionScreen(
-                title = "Notification Access",
-                description = "We use notifications to alert you when someone tries to break in.",
-                permission = Manifest.permission.POST_NOTIFICATIONS,
-                imageRes = R.raw.notification,
-                nextRoute = "location",
-                appContext = appContext,
-                navController = navController
-            )
-        }
-        composable("location") {
-            PermissionScreen(
-                title = "Location Access",
-                description = "Location helps us tag where the unauthorized attempt occurred.",
-                permission = Manifest.permission.ACCESS_FINE_LOCATION,
-                imageRes = R.raw.location,
-                nextRoute = "background_location",
-                appContext = appContext,
-                navController = navController
-            )
-        }
-        composable("background_location") {
-            PermissionScreen(
-                title = "Background location Access",
-                description = "Location helps us tag where the unauthorized attempt occurred.",
-                permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                imageRes = R.raw.background_loc,
-                nextRoute = null,
-                appContext = appContext,
-                navController = navController
-            )
-        }
-    }
-}
 
 @Composable
 fun ShowCheckAnimation() {
@@ -143,15 +94,15 @@ fun PermissionScreen(
         }
     }
 
-    // ✅ Permission request completed (either pre-granted or just granted)
     if (permissionGranted && hasRequestedPermission) {
         ShowCheckAnimation()
         LaunchedEffect("delayedNav") {
             delay(1500)
-            nextRoute?.let { navController.navigate(it) }
+            nextRoute?.let { navController.navigate(it){
+                popUpTo(0)
+            } }
         }
     } else {
-        // ✅ Show explanation screen even if permission is already granted
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -191,28 +142,101 @@ fun PermissionScreen(
     }
 }
 
+fun getRequiredPermissions() : List<String>{
+    return buildList {
+        add(Manifest.permission.CAMERA)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+    }
+}
 
+fun areAllPermissionsGranted(context: Context, permissions: List<String>) : Boolean{
+    return permissions.all {
+        ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+    }
+}
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun HomePage(appContext: Context) {
-    PermissionNavHost(appContext)
+    val navController = rememberNavController()
+
+    val needsPermissions by remember {
+        derivedStateOf {
+            !areAllPermissionsGranted(appContext, getRequiredPermissions())
+        }
+    }
+
+    NavHost(
+        navController = navController,
+        startDestination = if (needsPermissions) "camera" else "home"
+    ) {
+        // Permissions flow screens
+        composable("camera") {
+            PermissionScreen(
+                title = "Camera Access",
+                description = "We use your camera to take a picture of intruders.",
+                permission = Manifest.permission.CAMERA,
+                imageRes = R.raw.camera,
+                nextRoute = "notifications",
+                appContext = appContext,
+                navController = navController
+            )
+        }
+        composable("notifications") {
+            PermissionScreen(
+                title = "Notification Access",
+                description = "We use notifications to alert you when someone tries to break in.",
+                permission = Manifest.permission.POST_NOTIFICATIONS,
+                imageRes = R.raw.notification,
+                nextRoute = "location",
+                appContext = appContext,
+                navController = navController
+            )
+        }
+        composable("location") {
+            PermissionScreen(
+                title = "Location Access",
+                description = "Location helps us tag where the unauthorized attempt occurred.",
+                permission = Manifest.permission.ACCESS_FINE_LOCATION,
+                imageRes = R.raw.location,
+                nextRoute = "background_location",
+                appContext = appContext,
+                navController = navController
+            )
+        }
+        composable("background_location") {
+            PermissionScreen(
+                title = "Background location Access",
+                description = "Location helps us tag where the unauthorized attempt occurred.",
+                permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                imageRes = R.raw.background_loc,
+                nextRoute = "home",
+                appContext = appContext,
+                navController = navController
+            )
+        }
+
+        // Final destination
+        composable("home") {
+            Greeting()
+        }
+    }
 }
 
-
 @Composable
-fun PermissionExplanationList(permissions: List<String>) {
-    Column {
-        permissions.forEach { permission ->
-            val reason = when (permission) {
-                Manifest.permission.CAMERA -> "Camera – to capture intruders"
-                Manifest.permission.POST_NOTIFICATIONS -> "Notifications – to alert you instantly"
-                Manifest.permission.FOREGROUND_SERVICE_CAMERA -> "Foreground camera – to run in the background"
-                Manifest.permission.ACCESS_FINE_LOCATION -> "Location – for location tagging"
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION -> "Background location – to track without opening the app"
-                else -> "Permission required"
-            }
-            Text("• $reason", style = MaterialTheme.typography.bodyMedium)
-        }
+fun Greeting(){
+    Column(
+        modifier = Modifier.fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Greeting(name = "Jayce", modifier = Modifier.align(Alignment.CenterHorizontally))
     }
 }
