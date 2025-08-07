@@ -1,9 +1,13 @@
 package com.jaycefr.stepshadower
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -32,9 +37,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -73,74 +84,7 @@ fun ShowCheckAnimation() {
 }
 
 
-@Composable
-fun PermissionScreen(
-    title: String,
-    description: String,
-    permission: String,
-    imageRes: Int,
-    nextRoute: String?,
-    appContext: Context,
-    navController: NavController
-) {
-    var permissionGranted by remember { mutableStateOf(false) }
-    var hasRequestedPermission by remember { mutableStateOf(false) }
 
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            permissionGranted = true
-        }
-    }
-
-    if (permissionGranted && hasRequestedPermission) {
-        ShowCheckAnimation()
-        LaunchedEffect("delayedNav") {
-            delay(1500)
-            nextRoute?.let { navController.navigate(it){
-                popUpTo(0)
-            } }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(imageRes))
-            LottieAnimation(
-                composition = composition,
-                iterations = LottieConstants.IterateForever,
-                modifier = Modifier.size(200.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(title, style = MaterialTheme.typography.headlineMedium)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(description, style = MaterialTheme.typography.bodyLarge)
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(onClick = {
-                hasRequestedPermission = true
-                val alreadyGranted = ContextCompat.checkSelfPermission(appContext, permission) == PackageManager.PERMISSION_GRANTED
-                if (alreadyGranted) {
-                    permissionGranted = true
-                } else {
-                    launcher.launch(permission)
-                }
-            }) {
-                Text("Allow & Continue")
-            }
-        }
-    }
-}
 
 fun getRequiredPermissions() : List<String>{
     return buildList {
@@ -159,6 +103,15 @@ fun areAllPermissionsGranted(context: Context, permissions: List<String>) : Bool
     return permissions.all {
         ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
+}
+
+fun isPermissionPermanentlyDeclined(context : Context, permission: String): Boolean {
+//    val context = LocalContext.current
+    val activity = context as? Activity
+    return activity?.let {
+        !ActivityCompat.shouldShowRequestPermissionRationale(it, permission) &&
+                ContextCompat.checkSelfPermission(it, permission) != PackageManager.PERMISSION_GRANTED
+    } ?: false
 }
 
 @RequiresApi(Build.VERSION_CODES.Q)
