@@ -1,4 +1,6 @@
-package com.jaycefr.stepshadower
+package com.jaycefr.stepshadower.permissions
+
+import com.jaycefr.stepshadower.ShowCheckAnimation
 
 import android.app.Activity
 import android.content.Context
@@ -21,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -158,7 +159,6 @@ fun PermissionScreen(
                     Text("Allow & Continue")
                 }
             }
-
         }
     }
 }

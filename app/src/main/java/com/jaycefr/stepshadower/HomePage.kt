@@ -56,6 +56,8 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.jaycefr.stepshadower.permissions.PermissionScreen
+import com.jaycefr.stepshadower.permissions.buildRequiredPermissionList
 import com.jaycefr.stepshadower.step.Greeting
 import com.jaycefr.stepshadower.step.StepViewModel
 import com.jaycefr.stepshadower.step.StepsRepo
@@ -83,37 +85,6 @@ fun ShowCheckAnimation() {
     }
 }
 
-
-
-
-fun getRequiredPermissions() : List<String>{
-    return buildList {
-        add(Manifest.permission.CAMERA)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-        add(Manifest.permission.ACCESS_FINE_LOCATION)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        }
-    }
-}
-
-fun areAllPermissionsGranted(context: Context, permissions: List<String>) : Boolean{
-    return permissions.all {
-        ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-    }
-}
-
-fun isPermissionPermanentlyDeclined(context : Context, permission: String): Boolean {
-//    val context = LocalContext.current
-    val activity = context as? Activity
-    return activity?.let {
-        !ActivityCompat.shouldShowRequestPermissionRationale(it, permission) &&
-                ContextCompat.checkSelfPermission(it, permission) != PackageManager.PERMISSION_GRANTED
-    } ?: false
-}
-
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun HomePage(appContext: Context) {
@@ -121,58 +92,27 @@ fun HomePage(appContext: Context) {
 
     val needsPermissions by remember {
         derivedStateOf {
-            !areAllPermissionsGranted(appContext, getRequiredPermissions())
+            buildRequiredPermissionList(appContext, "home")
         }
     }
 
     NavHost(
         navController = navController,
-        startDestination = if (needsPermissions) "camera" else "home"
+        startDestination = if (needsPermissions.isNotEmpty()) needsPermissions[0].routeName else "home"
     ) {
         // Permissions flow screens
-        composable("camera") {
-            PermissionScreen(
-                title = "Camera Access",
-                description = "We use your camera to take a picture of intruders.",
-                permission = Manifest.permission.CAMERA,
-                imageRes = R.raw.camera,
-                nextRoute = "notifications",
-                appContext = appContext,
-                navController = navController
-            )
-        }
-        composable("notifications") {
-            PermissionScreen(
-                title = "Notification Access",
-                description = "We use notifications to alert you when someone tries to break in.",
-                permission = Manifest.permission.POST_NOTIFICATIONS,
-                imageRes = R.raw.notification,
-                nextRoute = "location",
-                appContext = appContext,
-                navController = navController
-            )
-        }
-        composable("location") {
-            PermissionScreen(
-                title = "Location Access",
-                description = "Location helps us tag where the unauthorized attempt occurred.",
-                permission = Manifest.permission.ACCESS_FINE_LOCATION,
-                imageRes = R.raw.location,
-                nextRoute = "background_location",
-                appContext = appContext,
-                navController = navController
-            )
-        }
-        composable("background_location") {
-            PermissionScreen(
-                title = "Background location Access",
-                description = "Location helps us tag where the unauthorized attempt occurred.",
-                permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                imageRes = R.raw.background_loc,
-                nextRoute = "home",
-                appContext = appContext,
-                navController = navController
-            )
+        for (permission in needsPermissions) {
+            composable(permission.routeName) {
+                PermissionScreen(
+                    title = permission.title,
+                    description = permission.description,
+                    permission = permission.permission,
+                    imageRes = permission.imageRes,
+                    nextRoute = permission.nextRoute,
+                    appContext = appContext,
+                    navController = navController
+                )
+            }
         }
 
         // Final destination
