@@ -33,31 +33,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-//        enableAdminReceiver = registerForActivityResult(
-//            ActivityResultContracts.StartActivityForResult()
-//        ){
-//            result ->
-//            if (result.resultCode == RESULT_OK){
-//                Log.d("MainActivity", "Admin enabled")
-//            }
-//            else{
-//                Log.d("MainActivity", "Admin not enabled")
-//            }
-//        }
-//
-//        val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-//        val adminComponent = ComponentName(this, AdminReceiver::class.java)
-//        if (!dpm.isAdminActive(adminComponent)){
-//            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-//                putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
-//                putExtra(
-//                    DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-//                    "This app needs Device Admin Permission to monitor failed logins."
-//                )
-//            }
-//            enableAdminReceiver.launch(intent)
-//        }
-
         shutDownReceiver = ShutDownReceiver()
         val filter = IntentFilter(Intent.ACTION_SHUTDOWN)
         registerReceiver(shutDownReceiver, filter)
