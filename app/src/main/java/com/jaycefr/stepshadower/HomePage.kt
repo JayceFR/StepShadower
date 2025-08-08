@@ -21,41 +21,9 @@ import com.jaycefr.stepshadower.permissions.PermissionScreen
 import com.jaycefr.stepshadower.permissions.buildRequiredPermissionList
 import com.jaycefr.stepshadower.step.Greeting
 
-@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
-fun HomePage(appContext: Context) {
-    val navController = rememberNavController()
-
-    val needsPermissions by remember {
-        derivedStateOf {
-            buildRequiredPermissionList(appContext, "home")
-        }
-    }
-
-    NavHost(
-        navController = navController,
-        startDestination = if (needsPermissions.isNotEmpty()) needsPermissions[0].routeName else "home"
-    ) {
-        // Permissions flow screens
-        for (permission in needsPermissions) {
-            composable(permission.routeName) {
-                PermissionScreen(
-                    title = permission.title,
-                    description = permission.description,
-                    permission = permission.permission,
-                    imageRes = permission.imageRes,
-                    nextRoute = permission.nextRoute,
-                    appContext = appContext,
-                    navController = navController
-                )
-            }
-        }
-
-        // Final destination
-        composable("home") {
-            Greeting()
-        }
-    }
+fun HomePage() {
+    Greeting()
 }
 
 @Composable

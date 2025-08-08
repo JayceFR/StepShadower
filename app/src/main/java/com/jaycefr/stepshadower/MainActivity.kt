@@ -18,6 +18,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.jaycefr.stepshadower.navigation.Navigation
 import com.jaycefr.stepshadower.step.StepPage
 import com.jaycefr.stepshadower.ui.theme.StepShadowerTheme
 
@@ -61,7 +62,7 @@ class MainActivity : ComponentActivity() {
         val filter = IntentFilter(Intent.ACTION_SHUTDOWN)
         registerReceiver(shutDownReceiver, filter)
         setContent {
-            HomePage(this.applicationContext)
+            Navigation(applicationContext)
         }
     }
 }
@@ -71,6 +72,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     StepShadowerTheme {
-        HomePage(LocalContext.current)
+        Navigation(LocalContext.current)
     }
 }
