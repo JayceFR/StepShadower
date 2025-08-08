@@ -2,11 +2,15 @@ package com.jaycefr.stepshadower.permissions
 
 
 import android.app.Activity
+import android.app.Activity.RESULT_OK
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -34,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -43,6 +48,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.jaycefr.stepshadower.AdminReceiver
 import com.jaycefr.stepshadower.R
 import kotlinx.coroutines.delay
 
@@ -50,11 +56,12 @@ import kotlinx.coroutines.delay
 fun PermissionScreen(
     title: String,
     description: String,
-    permission: String,
+    permission: String?,
     imageRes: Int,
     nextRoute: String?,
     appContext: Context,
-    navController: NavController
+    navController: NavController,
+    deviceAdmin : Boolean = false,
 ) {
     var showAnimation by remember { mutableStateOf(false) }
 
@@ -63,6 +70,17 @@ fun PermissionScreen(
     ) { granted ->
         if (granted) {
             showAnimation = true
+        }
+    }
+
+    val enableAdminReceiver = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ){ result ->
+        if (result.resultCode == RESULT_OK){
+            Log.d("MainActivity", "Admin enabled")
+        }
+        else{
+            Log.d("MainActivity", "Admin not enabled")
         }
     }
 
@@ -110,19 +128,27 @@ fun PermissionScreen(
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME) {
-                        val permissionGranted = ContextCompat.checkSelfPermission(
-                            context,
-                            permission
-                        ) == PackageManager.PERMISSION_GRANTED
-                        if (permissionGranted) {
-                            showAnimation = true
+                        if (deviceAdmin){
+                            val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                            val adminComponent = ComponentName(context, AdminReceiver::class.java)
+                            if (dpm.isAdminActive(adminComponent)){
+                                showAnimation = true
+                            }
                         }
+                        else{
+                            val permissionGranted = ContextCompat.checkSelfPermission(
+                                context,
+                                permission!!
+                            ) == PackageManager.PERMISSION_GRANTED
+                            if (permissionGranted) {
+                                showAnimation = true
+                            }
 
-                        isDeclinedPermanently.value = activity?.let {
-                            !ActivityCompat.shouldShowRequestPermissionRationale(it, permission) &&
-                                    ContextCompat.checkSelfPermission(it, permission) != PackageManager.PERMISSION_GRANTED
-                        } ?: false
-
+                            isDeclinedPermanently.value = activity?.let {
+                                !ActivityCompat.shouldShowRequestPermissionRationale(it, permission) &&
+                                        ContextCompat.checkSelfPermission(it, permission) != PackageManager.PERMISSION_GRANTED
+                            } ?: false
+                        }
                     }
                 }
 
@@ -152,10 +178,28 @@ fun PermissionScreen(
                 }
             } else {
                 Button(onClick = {
-                    if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
-                        showAnimation = true
-                    } else {
-                        launcher.launch(permission)
+                    if (deviceAdmin){
+                        val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                        val adminComponent = ComponentName(context, AdminReceiver::class.java)
+                        if (dpm.isAdminActive(adminComponent)) {
+                            showAnimation = true
+                        } else{
+                            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                                putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
+                                putExtra(
+                                    DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                                    "This app needs Device Admin Permission to monitor failed logins."
+                                )
+                            }
+                            enableAdminReceiver.launch(intent)
+                        }
+                    }
+                    else{
+                        if (ContextCompat.checkSelfPermission(context, permission!!) == PackageManager.PERMISSION_GRANTED) {
+                            showAnimation = true
+                        } else {
+                            launcher.launch(permission)
+                        }
                     }
                 }) {
                     Text("Allow & Continue")

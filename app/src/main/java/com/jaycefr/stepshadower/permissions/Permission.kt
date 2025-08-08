@@ -1,21 +1,33 @@
 package com.jaycefr.stepshadower.permissions
 
 import android.Manifest
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import com.jaycefr.stepshadower.AdminReceiver
 import com.jaycefr.stepshadower.R
 
 data class Permission(
     val title: String,
     val description: String,
-    val permission: String,
+    val permission: String?,
     val imageRes: Int,
     val routeName : String,
-    var nextRoute : String? = null
+    var nextRoute : String? = null,
+    val deviceAdmin : Boolean = false
 )
 
 val permissions : List<Permission> = listOf(
+    Permission(
+        title = "Device Admin Access",
+        description = "We need device admin to be able to monitor failed unlocks",
+        permission = null,
+        imageRes = R.raw.device_admin,
+        routeName = "device_admin",
+        deviceAdmin = true
+    ),
     Permission(
         title = "Camera Access",
         description = "We use your camera to take a picture of intruders.",
@@ -50,11 +62,23 @@ fun buildRequiredPermissionList(context : Context, nextRoute : String? = null) :
     val returnList = mutableListOf<Permission>()
 
     for (permission in permissions){
-        if (ContextCompat.checkSelfPermission(context, permission.permission) != PackageManager.PERMISSION_GRANTED){
-            if (returnList.isNotEmpty()){
-                returnList.last().nextRoute = permission.routeName
+        if (permission.deviceAdmin){
+            val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+            val adminComponent = ComponentName(context, AdminReceiver::class.java)
+            if (!dpm.isAdminActive(adminComponent)) {
+                if (returnList.isNotEmpty()){
+                    returnList.last().nextRoute = permission.routeName
+                }
+                returnList.add(permission.copy())
             }
-            returnList.add(permission.copy())
+        }
+        else{
+            if (ContextCompat.checkSelfPermission(context, permission.permission!!) != PackageManager.PERMISSION_GRANTED){
+                if (returnList.isNotEmpty()){
+                    returnList.last().nextRoute = permission.routeName
+                }
+                returnList.add(permission.copy())
+            }
         }
     }
 

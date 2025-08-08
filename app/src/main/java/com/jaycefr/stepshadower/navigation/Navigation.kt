@@ -36,7 +36,8 @@ fun Navigation(appContext : Context){
                     imageRes = permission.imageRes,
                     nextRoute = permission.nextRoute,
                     appContext = appContext,
-                    navController = navController
+                    navController = navController,
+                    deviceAdmin = permission.deviceAdmin
                 )
             }
         }
