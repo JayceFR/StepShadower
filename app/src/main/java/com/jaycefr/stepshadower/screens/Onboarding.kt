@@ -1,6 +1,7 @@
 package com.jaycefr.stepshadower.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -88,81 +89,55 @@ fun FailedAttemptsStepper(
 
 @Composable
 fun OnboardingScreen() {
-
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(com.jaycefr.stepshadower.R.raw.onboarding))
-
     var email by remember { mutableStateOf("") }
     var numberOfFailedAttempts by remember { mutableStateOf(3) }
 
-    // Show loading indicator while composition is null
-    AnimatedVisibility(
-        visible = (composition == null),
-        enter = fadeIn(),
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-    ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-            CircularProgressIndicator()
-        }
-    }
-
-    // Show Lottie animation with fade in when loaded
-    AnimatedVisibility(
-        visible = (composition != null),
-        enter = fadeIn(animationSpec = tween(durationMillis = 600)),
-        modifier = Modifier.fillMaxSize(),
-        exit = fadeOut()
-    ) {
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            LottieAnimation(
-                composition = composition,
-                iterations = LottieConstants.IterateForever,
-                modifier = Modifier.size(220.dp)
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Title
-            Text(
-                "Almost Ready to Come Aboard!",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    color = MaterialTheme.colorScheme.primary
-                ),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Email Section
-            Text(
-                "Enter the email where we should send the intruder’s picture:",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-            EmailInputField(email) { email = it }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Attempts Section
-            Text(
-                "Choose the number of failed attempts before we take the picture:",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-            FailedAttemptsStepper(numberOfFailedAttempts) { numberOfFailedAttempts = it }
+    Crossfade(targetState = composition != null, modifier = Modifier.fillMaxSize().padding(24.dp)) { isLoaded ->
+        if (!isLoaded) {
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        } else {
+            // Content with animation
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                LottieAnimation(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.size(220.dp)
+                )
+                Spacer(modifier = Modifier.height(28.dp))
+                Text(
+                    "Almost Ready to Come Aboard!",
+                    style = MaterialTheme.typography.headlineMedium.copy(color = MaterialTheme.colorScheme.primary),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Enter the email where we should send the intruder’s picture:",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                EmailInputField(email) { email = it }
+                Spacer(modifier = Modifier.height(28.dp))
+                Text(
+                    "Choose the number of failed attempts before we take the picture:",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                FailedAttemptsStepper(numberOfFailedAttempts) { numberOfFailedAttempts = it }
+            }
         }
     }
 }
+
 
 
