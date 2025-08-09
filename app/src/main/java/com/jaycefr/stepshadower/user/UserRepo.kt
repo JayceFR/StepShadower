@@ -1,4 +1,4 @@
-package com.jaycefr.stepshadower
+package com.jaycefr.stepshadower.user
 
 import android.content.Context
 import android.util.Log

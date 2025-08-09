@@ -1,4 +1,4 @@
-package com.jaycefr.stepshadower
+package com.jaycefr.stepshadower.user
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,4 +1,4 @@
-package com.jaycefr.stepshadower
+package com.jaycefr.stepshadower.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
