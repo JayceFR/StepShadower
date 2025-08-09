@@ -1,41 +1,23 @@
 package com.jaycefr.stepshadower.screens
 
-import android.app.Activity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
-import com.jaycefr.stepshadower.R
+import com.airbnb.lottie.compose.*
 
 @Composable
 fun EmailInputField(
@@ -47,36 +29,61 @@ fun EmailInputField(
         onValueChange = onEmailChange,
         label = { Text("Email Address") },
         singleLine = true,
+        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
-            imeAction = ImeAction.Done,
+            imeAction = ImeAction.Done
         ),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = CircleShape,  // Make the text field circular
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.primary,
+            disabledBorderColor = MaterialTheme.colorScheme.primary,
+            errorBorderColor = MaterialTheme.colorScheme.error,
+            focusedLabelColor = MaterialTheme.colorScheme.primary
+        )
     )
 }
+
 
 @Composable
 fun FailedAttemptsStepper(
     value: Int,
     onValueChange: (Int) -> Unit
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
         IconButton(
-            onClick = { if (value > 1) onValueChange(value - 1) }
-        ) { Text("−", fontSize = 24.sp) }
+            onClick = { if (value > 1) onValueChange(value - 1) },
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
+                .size(40.dp)
+        ) {
+            Text("−", fontSize = 24.sp, color = MaterialTheme.colorScheme.primary)
+        }
 
-        Text(value.toString(), modifier = Modifier.padding(horizontal = 16.dp))
+        Text(
+            value.toString(),
+            modifier = Modifier.padding(horizontal = 24.dp),
+            style = MaterialTheme.typography.headlineSmall
+        )
 
         IconButton(
-            onClick = { if (value < 5) onValueChange(value + 1) }
-        ) { Text("+", fontSize = 24.sp) }
+            onClick = { if (value < 5) onValueChange(value + 1) },
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
+                .size(40.dp)
+        ) {
+            Text("+", fontSize = 24.sp, color = MaterialTheme.colorScheme.primary)
+        }
     }
 }
 
-
-
 @Composable
-fun OnboardingScreen(){
+fun OnboardingScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -85,47 +92,51 @@ fun OnboardingScreen(){
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.onboarding))
+        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(com.jaycefr.stepshadower.R.raw.onboarding))
 
         var email by remember { mutableStateOf("") }
+        var numberOfFailedAttempts by remember { mutableStateOf(3) }
 
-        var numberOfFailedAttempts by remember { mutableIntStateOf(3) }
-
+        // Animation
         LottieAnimation(
             composition = composition,
             iterations = LottieConstants.IterateForever,
-            modifier = Modifier.size(200.dp)
+            modifier = Modifier.size(220.dp)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
+        // Title
         Text(
-            "Lets Complete Getting You Onboard!",
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            "Almost Ready to Come Aboard!",
+            style = MaterialTheme.typography.headlineMedium.copy(
+                color = MaterialTheme.colorScheme.primary
+            ),
+            textAlign = TextAlign.Center
         )
+
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Email Section
         Text(
-            "Enter the email to which you want the picture of the intruder to be sent",
+            "Enter the email where we should send the intruder’s picture:",
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(10.dp))
 
+        Spacer(modifier = Modifier.height(10.dp))
         EmailInputField(email) { email = it }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
+        // Attempts Section
         Text(
-            "Set the number of failed attempts after which you want the picture to be taken",
+            "Choose the number of failed attempts before we take the picture:",
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Center
         )
+
         Spacer(modifier = Modifier.height(10.dp))
-
         FailedAttemptsStepper(numberOfFailedAttempts) { numberOfFailedAttempts = it }
-
     }
 }
