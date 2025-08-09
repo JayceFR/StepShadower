@@ -60,7 +60,12 @@ class AdminReceiver : DeviceAdminReceiver(){
         val failedCount = prefs.getInt("count", 0) + 1
         prefs.edit { putInt("count", failedCount) }
 
-        if (failedCount >= 3){
+        val masterPrefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+        val allowedFailAttempts = masterPrefs.getInt("numberOfFailedAttempts", 3)
+
+        Log.d("AdminReceiver", "allowed failed attempts : $allowedFailAttempts")
+
+        if (failedCount >= allowedFailAttempts){
             Toast.makeText(context, "3 failed attempts detected", Toast.LENGTH_SHORT).show()
             Log.d("AdminReceiver", "3 failed attempts detected")
             showNotification(context, "3 failed attempts detected")

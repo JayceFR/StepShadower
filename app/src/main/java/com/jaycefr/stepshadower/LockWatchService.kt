@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -22,6 +23,7 @@ import androidx.lifecycle.LifecycleService
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import android.os.StrictMode
+import androidx.compose.ui.platform.LocalContext
 import java.util.Properties
 import javax.mail.Authenticator
 import javax.mail.Message
@@ -94,6 +96,10 @@ class LockWatchService : LifecycleService(){
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                         Log.d("Lockwatch", "Photo Saved : ${photoFile.absolutePath}")
 
+                        val prefs = applicationContext.getSharedPreferences("User", Context.MODE_PRIVATE)
+                        val toEmail : String = prefs.getString("email", "").toString()
+
+
                         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
                         if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
                             fusedLocationClient.lastLocation
@@ -109,7 +115,7 @@ class LockWatchService : LifecycleService(){
                                         // Send the email here
                                         val gmailUser = "jaycejefferson.vicious@gmail.com"
                                         val appPassword = "oeml jwrb ngdd gsfd"
-                                        val toEmail = "jaycejefferson31@gmail.com"
+//                                        val toEmail = "jaycejefferson31@gmail.com"
                                         val subject = "Intruder"
                                         val body = locationText
                                         val photoFile = File(photoFile.absolutePath)
@@ -121,7 +127,7 @@ class LockWatchService : LifecycleService(){
                                         // Send the email here
                                         val gmailUser = "jaycejefferson.vicious@gmail.com"
                                         val appPassword = "oeml jwrb ngdd gsfd"
-                                        val toEmail = "jaycejefferson31@gmail.com"
+//                                        val toEmail = "jaycejefferson31@gmail.com"
                                         val subject = "Intruder"
                                         val body = "Location not found"
                                         val photoFile = File(photoFile.absolutePath)
