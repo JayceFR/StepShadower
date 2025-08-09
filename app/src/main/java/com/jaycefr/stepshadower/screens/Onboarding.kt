@@ -23,6 +23,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.airbnb.lottie.compose.*
+import com.jaycefr.stepshadower.user.UserViewModel
+import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun EmailInputField(
@@ -88,7 +90,9 @@ fun FailedAttemptsStepper(
 }
 
 @Composable
-fun OnboardingScreen() {
+fun OnboardingScreen(
+    viewModel : UserViewModel
+) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(com.jaycefr.stepshadower.R.raw.onboarding))
     var email by remember { mutableStateOf("") }
     var numberOfFailedAttempts by remember { mutableStateOf(3) }
@@ -134,6 +138,16 @@ fun OnboardingScreen() {
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 FailedAttemptsStepper(numberOfFailedAttempts) { numberOfFailedAttempts = it }
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                Button(
+                    onClick = {
+                        viewModel.insertUser(email, numberOfFailedAttempts)
+                    }
+                ){
+                    Text("Continue")
+                }
             }
         }
     }

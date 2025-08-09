@@ -17,7 +17,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jaycefr.stepshadower.screens.HomePage
 import com.jaycefr.stepshadower.screens.OnboardingScreen
-import com.jaycefr.stepshadower.user.UserRepo
 import com.jaycefr.stepshadower.user.UserViewModel
 import com.jaycefr.stepshadower.permissions.PermissionScreen
 import com.jaycefr.stepshadower.permissions.buildRequiredPermissionList
@@ -26,8 +25,8 @@ import com.jaycefr.stepshadower.permissions.buildRequiredPermissionList
 fun Navigation(appContext : Context){
     val navController = rememberNavController()
 
-    val repo : UserRepo = remember { UserRepo(appContext) }
-    val userViewModel : UserViewModel = remember { UserViewModel(repo) }
+//    val repo : UserRepo = remember { UserRepo(appContext) }
+    val userViewModel : UserViewModel = remember { UserViewModel(appContext) }
 
     val onboard by userViewModel.toOnboard.collectAsState()
 
@@ -54,6 +53,8 @@ fun Navigation(appContext : Context){
                 "onboard"
             }
             else{
+                Log.d("Navigation", "email : ${userViewModel.email.value}")
+                Log.d("Navigation", "attempts : ${userViewModel.numberOfAttempts.value}")
                 "home"
             }
         }
@@ -82,7 +83,7 @@ fun Navigation(appContext : Context){
         }
 
         composable("onboard"){
-            OnboardingScreen()
+            OnboardingScreen(userViewModel)
         }
 
         // Final destination

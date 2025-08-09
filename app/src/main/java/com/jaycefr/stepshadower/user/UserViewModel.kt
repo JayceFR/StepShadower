@@ -1,46 +1,64 @@
 package com.jaycefr.stepshadower.user
 
+import android.content.Context
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class UserViewModel (
-    private val repo: UserRepo
+    private val context : Context
 ) : ViewModel() {
 
     val email = MutableStateFlow("")
     val numberOfAttempts = MutableStateFlow(3) // Default value set to 3
     val toOnboard = MutableStateFlow<Boolean?>(null)
 
+
     init {
-        viewModelScope.launch {
-            toOnboard.value = runCatching {repo.onboard()}.getOrDefault(false)
-            email.value = runCatching { repo.getEmail() }.getOrDefault("").toString()
-//            numberOfAttempts.value = runCatching { repo.getNumberOfFailedAttempts() }.getOrDefault(3)!!
-        }
+        refresh()
     }
 
     fun refresh(){
-        viewModelScope.launch {
-            email.value = runCatching { repo.getEmail() }.getOrDefault("").toString()
-            toOnboard.value = runCatching {repo.onboard()}.getOrDefault(false)
-//            numberOfAttempts.value = runCatching { repo.getNumberOfFailedAttempts() }.getOrDefault(3)!!
+        val prefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+        email.value = prefs.getString("email", "").toString()
+        numberOfAttempts.value = prefs.getInt("numberOfFailedAttempts", 3)
+        toOnboard.value = prefs.getBoolean("onboard", true)
+    }
+
+    fun insertUser(email : String, numberOfFailedAttempts : Int){
+
+        val prefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+        prefs.edit() {
+            putString("email", email)
+            putInt("numberOfFailedAttempts", numberOfFailedAttempts)
+            putBoolean("onboard", false)
+            apply()
         }
+
+        this.email.value = email
+        this.numberOfAttempts.value = numberOfFailedAttempts
+        this.toOnboard.value = false
+
     }
 
     fun updateEmail(email : String){
-        this.email.value = email
-        viewModelScope.launch {
-            repo.updateEmail(email)
+        val prefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+        prefs.edit(){
+            putString("email", email)
+            apply()
         }
+        this.email.value = email
     }
 
     fun updateNumberOfFailedAttempts(numberOfFailedAttempts : Int){
-        this.numberOfAttempts.value = numberOfFailedAttempts
-        viewModelScope.launch {
-            repo.updateNumberOfFailedAttempts(numberOfFailedAttempts)
+        val prefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+        prefs.edit(){
+            putInt("numberOfFailedAttempts", numberOfFailedAttempts)
+            apply()
         }
+        this.numberOfAttempts.value = numberOfFailedAttempts
     }
 
 }
