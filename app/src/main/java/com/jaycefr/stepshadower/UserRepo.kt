@@ -1,6 +1,7 @@
 package com.jaycefr.stepshadower
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
 
 class UserRepo(private val appContext : Context){
@@ -25,6 +26,8 @@ class UserRepo(private val appContext : Context){
 
     suspend fun onboard() : Boolean{
         val users : List<Int> = getUsers()
+        Log.d("UserRepo", "users: $users")
+        Log.d("UserRepo", "users.isEmpty(): ${users.isEmpty()}")
         return users.isEmpty()
     }
 

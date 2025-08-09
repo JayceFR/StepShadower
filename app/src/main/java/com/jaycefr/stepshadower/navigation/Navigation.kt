@@ -1,14 +1,26 @@
 package com.jaycefr.stepshadower.navigation
 
 import android.content.Context
+import android.util.Log
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jaycefr.stepshadower.HomePage
+import com.jaycefr.stepshadower.OnboardingScreen
+import com.jaycefr.stepshadower.UserRepo
+import com.jaycefr.stepshadower.UserViewModel
 import com.jaycefr.stepshadower.permissions.PermissionScreen
 import com.jaycefr.stepshadower.permissions.buildRequiredPermissionList
 
@@ -16,15 +28,44 @@ import com.jaycefr.stepshadower.permissions.buildRequiredPermissionList
 fun Navigation(appContext : Context){
     val navController = rememberNavController()
 
+    val repo : UserRepo = remember { UserRepo(appContext) }
+    val userViewModel : UserViewModel = remember { UserViewModel(repo) }
+
+    val onboard by userViewModel.toOnboard.collectAsState()
+
+    if (onboard == null){
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     val needsPermissions by remember {
         derivedStateOf {
-            buildRequiredPermissionList(appContext, "home")
+            val onboard = userViewModel.toOnboard.value
+            buildRequiredPermissionList(appContext, if (onboard == true) "onboard" else "home")
         }
     }
 
+    val startPos = remember {
+        derivedStateOf {
+            if (needsPermissions.isNotEmpty()){
+                needsPermissions[0].routeName
+            }
+            else if (onboard == true){
+                "onboard"
+            }
+            else{
+                "home"
+            }
+        }
+    }
+
+    Log.d("Navigation", "startPos: ${startPos.value}")
+
     NavHost(
         navController = navController,
-        startDestination = if (needsPermissions.isNotEmpty()) needsPermissions[0].routeName else "home"
+        startDestination = startPos.value
     ) {
         // Permissions flow screens
         for (permission in needsPermissions) {
@@ -40,6 +81,10 @@ fun Navigation(appContext : Context){
                     deviceAdmin = permission.deviceAdmin
                 )
             }
+        }
+
+        composable("onboard"){
+            OnboardingScreen()
         }
 
         // Final destination

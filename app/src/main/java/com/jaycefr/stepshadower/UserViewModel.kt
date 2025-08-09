@@ -11,13 +11,21 @@ class UserViewModel (
 
     val email = MutableStateFlow("")
     val numberOfAttempts = MutableStateFlow(3) // Default value set to 3
-    val toOnboard = MutableStateFlow(false)
+    val toOnboard = MutableStateFlow<Boolean?>(null)
 
     init {
         viewModelScope.launch {
-            toOnboard.value = repo.onboard()
+            toOnboard.value = runCatching {repo.onboard()}.getOrDefault(false)
             email.value = runCatching { repo.getEmail() }.getOrDefault("").toString()
-            numberOfAttempts.value = runCatching { repo.getNumberOfFailedAttempts() }.getOrDefault(3)!!
+//            numberOfAttempts.value = runCatching { repo.getNumberOfFailedAttempts() }.getOrDefault(3)!!
+        }
+    }
+
+    fun refresh(){
+        viewModelScope.launch {
+            email.value = runCatching { repo.getEmail() }.getOrDefault("").toString()
+            toOnboard.value = runCatching {repo.onboard()}.getOrDefault(false)
+//            numberOfAttempts.value = runCatching { repo.getNumberOfFailedAttempts() }.getOrDefault(3)!!
         }
     }
 
