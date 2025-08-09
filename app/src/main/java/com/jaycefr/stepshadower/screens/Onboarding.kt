@@ -1,5 +1,9 @@
 package com.jaycefr.stepshadower.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -84,59 +88,81 @@ fun FailedAttemptsStepper(
 
 @Composable
 fun OnboardingScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(com.jaycefr.stepshadower.R.raw.onboarding))
+
+    var email by remember { mutableStateOf("") }
+    var numberOfFailedAttempts by remember { mutableStateOf(3) }
+
+    // Show loading indicator while composition is null
+    AnimatedVisibility(
+        visible = (composition == null),
+        enter = fadeIn(),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
     ) {
-        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(com.jaycefr.stepshadower.R.raw.onboarding))
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+            CircularProgressIndicator()
+        }
+    }
 
-        var email by remember { mutableStateOf("") }
-        var numberOfFailedAttempts by remember { mutableStateOf(3) }
+    // Show Lottie animation with fade in when loaded
+    AnimatedVisibility(
+        visible = (composition != null),
+        enter = fadeIn(animationSpec = tween(durationMillis = 600)),
+        modifier = Modifier.fillMaxSize(),
+        exit = fadeOut()
+    ) {
 
-        // Animation
-        LottieAnimation(
-            composition = composition,
-            iterations = LottieConstants.IterateForever,
-            modifier = Modifier.size(220.dp)
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            LottieAnimation(
+                composition = composition,
+                iterations = LottieConstants.IterateForever,
+                modifier = Modifier.size(220.dp)
+            )
 
-        Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-        // Title
-        Text(
-            "Almost Ready to Come Aboard!",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                color = MaterialTheme.colorScheme.primary
-            ),
-            textAlign = TextAlign.Center
-        )
+            // Title
+            Text(
+                "Almost Ready to Come Aboard!",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = MaterialTheme.colorScheme.primary
+                ),
+                textAlign = TextAlign.Center
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Email Section
-        Text(
-            "Enter the email where we should send the intruder’s picture:",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
+            // Email Section
+            Text(
+                "Enter the email where we should send the intruder’s picture:",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
 
-        Spacer(modifier = Modifier.height(10.dp))
-        EmailInputField(email) { email = it }
+            Spacer(modifier = Modifier.height(10.dp))
+            EmailInputField(email) { email = it }
 
-        Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-        // Attempts Section
-        Text(
-            "Choose the number of failed attempts before we take the picture:",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
+            // Attempts Section
+            Text(
+                "Choose the number of failed attempts before we take the picture:",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
 
-        Spacer(modifier = Modifier.height(10.dp))
-        FailedAttemptsStepper(numberOfFailedAttempts) { numberOfFailedAttempts = it }
+            Spacer(modifier = Modifier.height(10.dp))
+            FailedAttemptsStepper(numberOfFailedAttempts) { numberOfFailedAttempts = it }
+        }
     }
 }
+
+
