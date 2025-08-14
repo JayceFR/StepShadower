@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.airbnb.lottie.compose.*
 import com.jaycefr.stepshadower.user.UserViewModel
 import kotlin.coroutines.suspendCoroutine
@@ -91,7 +92,8 @@ fun FailedAttemptsStepper(
 
 @Composable
 fun OnboardingScreen(
-    viewModel : UserViewModel
+    viewModel : UserViewModel,
+    navController : NavController
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(com.jaycefr.stepshadower.R.raw.onboarding))
     var email by remember { mutableStateOf("") }
@@ -144,6 +146,9 @@ fun OnboardingScreen(
                 Button(
                     onClick = {
                         viewModel.insertUser(email, numberOfFailedAttempts)
+                        navController.navigate("home"){
+                            popUpTo(0)
+                        }
                     }
                 ){
                     Text("Continue")

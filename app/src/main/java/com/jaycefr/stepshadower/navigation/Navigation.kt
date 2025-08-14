@@ -83,7 +83,10 @@ fun Navigation(appContext : Context){
         }
 
         composable("onboard"){
-            OnboardingScreen(userViewModel)
+            OnboardingScreen(
+                viewModel = userViewModel,
+                navController = navController
+            )
         }
 
         // Final destination

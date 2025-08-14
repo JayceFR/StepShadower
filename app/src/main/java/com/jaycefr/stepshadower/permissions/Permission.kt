@@ -5,6 +5,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.content.ContextCompat
 import com.jaycefr.stepshadower.AdminReceiver
 import com.jaycefr.stepshadower.R
@@ -73,11 +74,23 @@ fun buildRequiredPermissionList(context : Context, nextRoute : String? = null) :
             }
         }
         else{
-            if (ContextCompat.checkSelfPermission(context, permission.permission!!) != PackageManager.PERMISSION_GRANTED){
-                if (returnList.isNotEmpty()){
-                    returnList.last().nextRoute = permission.routeName
+            if (permission.permission!! == Manifest.permission.ACCESS_BACKGROUND_LOCATION){
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                    if (ContextCompat.checkSelfPermission(context, permission.permission!!) != PackageManager.PERMISSION_GRANTED){
+                        if (returnList.isNotEmpty()){
+                            returnList.last().nextRoute = permission.routeName
+                        }
+                        returnList.add(permission.copy())
+                    }
                 }
-                returnList.add(permission.copy())
+            }
+            else{
+                if (ContextCompat.checkSelfPermission(context, permission.permission!!) != PackageManager.PERMISSION_GRANTED){
+                    if (returnList.isNotEmpty()){
+                        returnList.last().nextRoute = permission.routeName
+                    }
+                    returnList.add(permission.copy())
+                }
             }
         }
     }
