@@ -18,6 +18,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.res.painterResource
+import com.jaycefr.stepshadower.R
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,7 +37,7 @@ fun HomePage() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             LockWith3DOrbits(
                 modifier = Modifier
@@ -56,14 +57,14 @@ fun HomePage() {
                 StatCard(
                     title = "Intruders detected",
                     value = count.toString(),
-                    iconRes = android.R.drawable.ic_menu_camera,
+                    iconRes = R.drawable.intruder2,
                     modifier = Modifier.weight(1f)
                 )
 
                 StatCard(
                     title = "Trial left",
                     value = "$trialDaysLeft days",
-                    iconRes = android.R.drawable.ic_dialog_info,
+                    iconRes = R.drawable.hourglass,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -72,7 +73,7 @@ fun HomePage() {
             // Photo list below stats
             if (photos.isNotEmpty()) {
                 Text(
-                    text = "Captured Intruder Photos:",
+                    text = "Intruders",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -106,6 +107,9 @@ fun StatCard(
     Card(
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
         modifier = modifier
             .height(140.dp) // uniform height for all cards
     ) {
@@ -120,13 +124,14 @@ fun StatCard(
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = title,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(42.dp)
             )
 
             // Value big in the middle
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineMedium, // big text
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 
