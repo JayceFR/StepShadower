@@ -35,6 +35,7 @@ fun HomePage() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
         ) {
             LockWith3DOrbits(
