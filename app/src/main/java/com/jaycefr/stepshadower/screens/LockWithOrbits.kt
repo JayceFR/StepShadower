@@ -1,9 +1,5 @@
 package com.jaycefr.stepshadower.screens
 
-//@file:Suppress("MagicNumber")
-
-//package com.example.lockorbits
-
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -36,10 +32,7 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-/**
- * A premium-looking lock with two tilted orbit rings and orbiting dots that
- * pass *behind* and *in front of* the lock to create a subtle 3D illusion.
- */
+
 @Composable
 fun LockWith3DOrbits(
     modifier: Modifier = Modifier,
@@ -72,7 +65,7 @@ fun LockWith3DOrbits(
     Box(
         modifier
             .size(lockSize)
-            .background(Color.White) // white background
+            .background(MaterialTheme.colorScheme.background) // white background
     ) {
         Canvas(Modifier.fillMaxSize()) {
             val minDim = min(size.width, size.height)
