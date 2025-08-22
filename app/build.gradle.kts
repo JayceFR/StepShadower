@@ -100,4 +100,7 @@ dependencies {
 
     // Lottie animation
     implementation(libs.lottie.compose)
+
+    // Web View
+    implementation("androidx.webkit:webkit:1.8.0")
 }
