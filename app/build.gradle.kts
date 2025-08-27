@@ -103,4 +103,7 @@ dependencies {
 
     // Web View
     implementation("androidx.webkit:webkit:1.8.0")
+
+    // Face analyser
+    implementation("com.google.mlkit:face-detection:16.1.6")
 }

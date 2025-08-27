@@ -117,9 +117,18 @@ class LockWatchService : LifecycleService(){
                                         val appPassword = "oeml jwrb ngdd gsfd"
 //                                        val toEmail = "jaycejefferson31@gmail.com"
                                         val subject = "Intruder"
-                                        val body = locationText
                                         val photoFile = File(photoFile.absolutePath)
-                                        sendEmail(gmailUser, appPassword, toEmail, subject, body, photoFile)
+                                        analyzeFaceSummary(photoFile){
+                                            faceSummary ->
+                                            val body = """
+                                                Intruder detected 
+                                                
+                                                $faceSummary
+                                                
+                                                $locationText
+                                            """.trimIndent()
+                                            sendEmail(gmailUser, appPassword, toEmail, subject, body, photoFile)
+                                        }
                                         stopSelf()
                                     }
                                     else{
