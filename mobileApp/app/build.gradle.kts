@@ -109,4 +109,9 @@ dependencies {
 
     // Animations for naivagation
     implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0")
+
+    // Base TensorFlow Lite runtime
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    // Add Flex delegate to support ops like TensorList
+    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0")
 }

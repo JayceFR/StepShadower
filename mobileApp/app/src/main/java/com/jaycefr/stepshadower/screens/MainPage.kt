@@ -95,7 +95,7 @@ fun MainPage(){
                 popEnterTransition = { slideInHorizontally { -it } + fadeIn() },
                 popExitTransition = { slideOutHorizontally { it } + fadeOut() }
             ) {
-                AIScreen()
+                AIPage()
             }
         }
     }

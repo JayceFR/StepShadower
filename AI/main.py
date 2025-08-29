@@ -12,8 +12,9 @@ df["label_id"] = df["label"].map(label_map)
 
 def simple_tokenizer(text):
     text = text.lower()
-    text = re.sub(r'[^\w\s]', '', text)
+    text = re.sub(r'[^a-z0-9@.\s]', '', text)  # keep @ and .
     return text.split()
+
 
 all_tokens = [token for text in df["text"] for token in simple_tokenizer(text)]
 vocab = sorted(list(set(all_tokens)))
