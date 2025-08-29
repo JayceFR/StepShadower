@@ -25,6 +25,13 @@ fun AIPage() {
     var message by remember { mutableStateOf("") }
     var messages = remember { mutableStateListOf<String>() }
 
+    // Add a friendly welcome at start
+    LaunchedEffect(Unit) {
+        messages.add(
+            "Bot: Hi there! 😄 I'm your personal assistant. I can help you change your email 📧, adjust thresholds 🔢, enable/disable alerts ✅🚫, or just chat with you. Ask me anything!"
+        )
+    }
+
     // Dialog states
     var showThresholdDialog by remember { mutableStateOf(false) }
     var showEmailDialog by remember { mutableStateOf(false) }
@@ -58,7 +65,7 @@ fun AIPage() {
             Button(onClick = {
                 if (message.isNotBlank()) {
 
-                    val currentMessage = message // save before clearing
+                    val currentMessage = message
                     val label = predictIntent(context, currentMessage)
 
                     // Extract before clearing
@@ -77,7 +84,7 @@ fun AIPage() {
                         else -> "Hmm… I understood '$label', but let's keep going! 😊"
                     }
                     messages.add("Bot: $friendlyReply")
-                    message = "" // now safe to clear
+                    message = "" // clear input
 
                     when (label) {
                         "change_threshold" -> {
@@ -88,17 +95,8 @@ fun AIPage() {
                             newEmail = extractedEmail
                             showEmailDialog = true
                         }
-                        "enable_alerts" -> {
-                            prefs.edit { putBoolean("activated", true) }
-                            Toast.makeText(context, "✅ Alerts enabled", Toast.LENGTH_SHORT).show()
-                            messages.add("Bot: Alerts enabled")
-                        }
-                        "disable_alerts" -> {
-                            prefs.edit { putBoolean("activated", false) }
-                            Toast.makeText(context, "🚫 Alerts disabled", Toast.LENGTH_SHORT).show()
-                            messages.add("Bot: Alerts disabled")
-                        }
-                        else -> Toast.makeText(context, "Predicted: $label", Toast.LENGTH_SHORT).show()
+                        "enable_alerts" -> prefs.edit { putBoolean("activated", true) }
+                        "disable_alerts" -> prefs.edit { putBoolean("activated", false) }
                     }
                 }
             }) {
@@ -203,7 +201,7 @@ fun predictIntent(context: Context, text: String): String {
 }
 
 fun extractEmail(text: String, prefs: android.content.SharedPreferences): String? {
-    val matcher = Patterns.EMAIL_ADDRESS.matcher(text)
+    val matcher = android.util.Patterns.EMAIL_ADDRESS.matcher(text)
     return if (matcher.find()) matcher.group() else null
 }
 
@@ -212,3 +210,4 @@ fun extractThreshold(text: String, prefs: android.content.SharedPreferences): In
     val match = numberRegex.find(text)
     return match?.value?.toIntOrNull()
 }
+
