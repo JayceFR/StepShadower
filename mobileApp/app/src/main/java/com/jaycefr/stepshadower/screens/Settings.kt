@@ -19,7 +19,7 @@ fun SettingsPage() {
     // Load saved values
     var email by remember { mutableStateOf(prefs.getString("email", "") ?: "") }
     var attempts by remember { mutableStateOf(prefs.getInt("attempts", 3)) }
-    var isActive by remember { mutableStateOf(prefs.getBoolean("active", true)) }
+    var isActive by remember { mutableStateOf(prefs.getBoolean("activated", true)) }
 
     Column(
         modifier = Modifier
@@ -108,7 +108,7 @@ fun SettingsPage() {
                 prefs.edit {
                     putString("email", email)
                     putInt("attempts", attempts)
-                    putBoolean("active", isActive)
+                    putBoolean("activated", isActive)
                 }
                 Toast.makeText(context, "✅ Settings saved", Toast.LENGTH_SHORT).show()
             },

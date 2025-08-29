@@ -1,6 +1,5 @@
 package com.jaycefr.stepshadower
 
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.admin.DeviceAdminReceiver
@@ -8,17 +7,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.UserHandle
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.annotation.RequiresPermission
-import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 
-class AdminReceiver : DeviceAdminReceiver(){
+class AdminReceiver : DeviceAdminReceiver() {
     override fun onEnabled(context: Context, intent: Intent) {
         Toast.makeText(context, "Device admin enabled", Toast.LENGTH_SHORT).show()
         super.onEnabled(context, intent)
@@ -29,11 +24,11 @@ class AdminReceiver : DeviceAdminReceiver(){
         super.onDisabled(context, intent)
     }
 
-    fun showNotification(context : Context, msg : String){
+    private fun showNotification(context: Context, msg: String) {
         val channelId = "fail_channel"
         val rm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel =
                 NotificationChannel(channelId, "Fail Channel", NotificationManager.IMPORTANCE_HIGH)
             rm.createNotificationChannel(channel)
@@ -47,7 +42,6 @@ class AdminReceiver : DeviceAdminReceiver(){
             .build()
 
         rm.notify(42, notification)
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -56,23 +50,30 @@ class AdminReceiver : DeviceAdminReceiver(){
         intent: Intent,
         user: UserHandle
     ) {
+        val masterPrefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+
+        // ✅ Check if activated
+        val isActive = masterPrefs.getBoolean("activated", false)
+        if (!isActive) {
+            Log.d("AdminReceiver", "Feature is deactivated, ignoring failed attempt")
+            return
+        }
+
+        // Continue only if active
         val prefs = context.getSharedPreferences("failed_attempts", Context.MODE_PRIVATE)
         val failedCount = prefs.getInt("count", 0) + 1
         prefs.edit { putInt("count", failedCount) }
 
-        val masterPrefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
         val allowedFailAttempts = masterPrefs.getInt("numberOfFailedAttempts", 3)
+        Log.d("AdminReceiver", "Allowed failed attempts : $allowedFailAttempts")
 
-        Log.d("AdminReceiver", "allowed failed attempts : $allowedFailAttempts")
-
-        if (failedCount >= allowedFailAttempts){
-            Toast.makeText(context, "3 failed attempts detected", Toast.LENGTH_SHORT).show()
-            Log.d("AdminReceiver", "3 failed attempts detected")
-            showNotification(context, "3 failed attempts detected")
+        if (failedCount >= allowedFailAttempts) {
+            Toast.makeText(context, "$allowedFailAttempts failed attempts detected", Toast.LENGTH_SHORT).show()
+            Log.d("AdminReceiver", "$allowedFailAttempts failed attempts detected")
+            showNotification(context, "$allowedFailAttempts failed attempts detected")
 
             val serviceIntent = Intent(context, LockWatchService::class.java)
             context.startForegroundService(serviceIntent)
-
 
             prefs.edit { putInt("count", 0) }
         }
@@ -85,7 +86,14 @@ class AdminReceiver : DeviceAdminReceiver(){
         intent: Intent,
         user: UserHandle
     ) {
-//        Toast.makeText(context, "Welcome boss", Toast.LENGTH_SHORT).show()
+        // ✅ Reset only if active
+        val masterPrefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+        val isActive = masterPrefs.getBoolean("activated", false)
+        if (!isActive) {
+            Log.d("AdminReceiver", "Feature is deactivated, ignoring password success")
+            return
+        }
+
         val prefs = context.getSharedPreferences("failed_attempts", Context.MODE_PRIVATE)
         prefs.edit { putInt("count", 0) }
         super.onPasswordSucceeded(context, intent, user)

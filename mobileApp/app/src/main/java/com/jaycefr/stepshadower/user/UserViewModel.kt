@@ -34,6 +34,7 @@ class UserViewModel (
             putString("email", email)
             putInt("numberOfFailedAttempts", numberOfFailedAttempts)
             putBoolean("onboard", false)
+            putBoolean("activated", true)
             apply()
         }
 
