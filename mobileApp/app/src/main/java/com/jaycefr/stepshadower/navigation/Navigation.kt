@@ -20,6 +20,8 @@ import com.jaycefr.stepshadower.screens.OnboardingScreen
 import com.jaycefr.stepshadower.user.UserViewModel
 import com.jaycefr.stepshadower.permissions.PermissionScreen
 import com.jaycefr.stepshadower.permissions.buildRequiredPermissionList
+import com.jaycefr.stepshadower.screens.MainPage
+//import com.jaycefr.stepshadower.screens.Settings
 
 @Composable
 fun Navigation(appContext : Context){
@@ -91,7 +93,8 @@ fun Navigation(appContext : Context){
 
         // Final destination
         composable("home") {
-            HomePage()
+            MainPage()
         }
+
     }
 }

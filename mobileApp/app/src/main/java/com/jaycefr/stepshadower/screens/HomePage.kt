@@ -18,6 +18,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.res.painterResource
+import androidx.navigation.NavController
 import com.jaycefr.stepshadower.R
 import java.text.SimpleDateFormat
 import java.util.*

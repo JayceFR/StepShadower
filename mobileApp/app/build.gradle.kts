@@ -106,4 +106,7 @@ dependencies {
 
     // Face analyser
     implementation("com.google.mlkit:face-detection:16.1.6")
+
+    // Animations for naivagation
+    implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0")
 }
