@@ -1,20 +1,12 @@
 package com.jaycefr.stepshadower.screens
 
 import android.content.Context
+import android.util.Patterns
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,11 +25,11 @@ fun AIPage() {
     var message by remember { mutableStateOf("") }
     var messages = remember { mutableStateListOf<String>() }
 
-    // dialog states
+    // Dialog states
     var showThresholdDialog by remember { mutableStateOf(false) }
     var showEmailDialog by remember { mutableStateOf(false) }
 
-    // dialog inputs
+    // Dialog inputs
     var newThreshold by remember { mutableStateOf("") }
     var newEmail by remember { mutableStateOf("") }
 
@@ -65,15 +57,37 @@ fun AIPage() {
             )
             Button(onClick = {
                 if (message.isNotBlank()) {
-                    messages.add("You: $message")
 
-                    val label = predictIntent(context, message)
-                    messages.add("Bot: $label")
-                    message = ""
+                    val currentMessage = message // save before clearing
+                    val label = predictIntent(context, currentMessage)
+
+                    // Extract before clearing
+                    val extractedEmail = extractEmail(currentMessage, prefs)
+                        ?: prefs.getString("email", "")!!
+                    val extractedThreshold = extractThreshold(currentMessage, prefs)
+                        ?: prefs.getInt("attempts", 3)
+
+                    messages.add("You: $currentMessage")
+                    val friendlyReply = when (label) {
+                        "change_email" -> "Sure! Let's update your email 📧. Please check the box below."
+                        "change_threshold" -> "Got it! Let's adjust your threshold 🔢. You can edit it below."
+                        "enable_alerts" -> "All set! ✅ Alerts are now enabled. Stay safe!"
+                        "disable_alerts" -> "No worries! 🚫 Alerts are now disabled. I'll stay quiet for now."
+                        "other" -> "Hey there! 😄 I’m here to help. Ask me anything or just say hi!"
+                        else -> "Hmm… I understood '$label', but let's keep going! 😊"
+                    }
+                    messages.add("Bot: $friendlyReply")
+                    message = "" // now safe to clear
 
                     when (label) {
-                        "change_threshold" -> showThresholdDialog = true
-                        "change_email" -> showEmailDialog = true
+                        "change_threshold" -> {
+                            newThreshold = extractedThreshold.toString()
+                            showThresholdDialog = true
+                        }
+                        "change_email" -> {
+                            newEmail = extractedEmail
+                            showEmailDialog = true
+                        }
                         "enable_alerts" -> {
                             prefs.edit { putBoolean("activated", true) }
                             Toast.makeText(context, "✅ Alerts enabled", Toast.LENGTH_SHORT).show()
@@ -117,14 +131,10 @@ fun AIPage() {
                     }
                     newThreshold = ""
                     showThresholdDialog = false
-                }) {
-                    Text("Save")
-                }
+                }) { Text("Save") }
             },
             dismissButton = {
-                Button(onClick = { showThresholdDialog = false }) {
-                    Text("Cancel")
-                }
+                Button(onClick = { showThresholdDialog = false }) { Text("Cancel") }
             }
         )
     }
@@ -142,7 +152,7 @@ fun AIPage() {
             },
             confirmButton = {
                 Button(onClick = {
-                    if (android.util.Patterns.EMAIL_ADDRESS.matcher(newEmail).matches()) {
+                    if (Patterns.EMAIL_ADDRESS.matcher(newEmail).matches()) {
                         prefs.edit { putString("email", newEmail) }
                         Toast.makeText(context, "📧 Email updated to $newEmail", Toast.LENGTH_SHORT).show()
                         messages.add("Bot: Email updated")
@@ -151,19 +161,16 @@ fun AIPage() {
                     }
                     newEmail = ""
                     showEmailDialog = false
-                }) {
-                    Text("Save")
-                }
+                }) { Text("Save") }
             },
             dismissButton = {
-                Button(onClick = { showEmailDialog = false }) {
-                    Text("Cancel")
-                }
+                Button(onClick = { showEmailDialog = false }) { Text("Cancel") }
             }
         )
     }
 }
 
+// ---------- Helper functions ----------
 fun loadModelFile(context: Context, modelPath: String): MappedByteBuffer {
     val fileDescriptor = context.assets.openFd(modelPath)
     val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
@@ -183,12 +190,9 @@ fun predictIntent(context: Context, text: String): String {
     val maxLen = 20
     val tokens = text.lowercase().replace(Regex("[^\\w\\s]"), "").split(" ")
     val seq = IntArray(maxLen) { 0 }
-    tokens.take(maxLen).forEachIndexed { i, token ->
-        seq[i] = vocab[token] ?: 0
-    }
+    tokens.take(maxLen).forEachIndexed { i, token -> seq[i] = vocab[token] ?: 0 }
 
     val interpreter = Interpreter(loadModelFile(context, "intent_classifier.tflite"))
-
     val input = Array(1) { seq.map { it.toFloat() }.toFloatArray() }
     val output = Array(1) { FloatArray(labels.size) }
     interpreter.run(input, output)
@@ -196,4 +200,15 @@ fun predictIntent(context: Context, text: String): String {
     val probs = output[0]
     val maxIdx = probs.indices.maxByOrNull { probs[it] } ?: 0
     return labels[maxIdx]
+}
+
+fun extractEmail(text: String, prefs: android.content.SharedPreferences): String? {
+    val matcher = Patterns.EMAIL_ADDRESS.matcher(text)
+    return if (matcher.find()) matcher.group() else null
+}
+
+fun extractThreshold(text: String, prefs: android.content.SharedPreferences): Int? {
+    val numberRegex = Regex("\\d+")
+    val match = numberRegex.find(text)
+    return match?.value?.toIntOrNull()
 }
