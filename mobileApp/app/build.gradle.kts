@@ -1,9 +1,20 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
 }
+
+// Load API key from local.properties
+val localProperties = Properties().apply {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) {
+        load(localFile.inputStream())
+    }
+}
+val apiKey: String = localProperties.getProperty("API_KEY") ?: ""
 
 android {
     namespace = "com.jaycefr.stepshadower"
@@ -20,6 +31,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Inject API key into BuildConfig
+        buildConfigField("String", "API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -47,10 +61,11 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
-            excludes += setOf(
-                "META-INF/NOTICE.md",
-                "META-INF/LICENSE.md")
+            excludes += setOf("META-INF/NOTICE.md", "META-INF/LICENSE.md")
         }
+    }
+    buildFeatures{
+        buildConfig=true
     }
 }
 
@@ -75,17 +90,16 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    // Custom added implementations
     // Step counter
     implementation(libs.play.services.fitness)
+
     // Room database
     val roomVersion = "2.7.2"
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
-    // Camera
-    val camerax_version = "1.3.0-rc01"
 
+    // CameraX
     implementation("androidx.camera:camera-core:1.4.2")
     implementation("androidx.camera:camera-camera2:1.4.2")
     implementation("androidx.camera:camera-lifecycle:1.4.2")
@@ -107,11 +121,13 @@ dependencies {
     // Face analyser
     implementation("com.google.mlkit:face-detection:16.1.6")
 
-    // Animations for naivagation
+    // Navigation animations
     implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0")
 
-    // Base TensorFlow Lite runtime
+    // TensorFlow Lite
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
-    // Add Flex delegate to support ops like TensorList
     implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0")
+
+    // Networking
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
 }
