@@ -27,6 +27,7 @@ import com.jaycefr.stepshadower.R
 sealed class Screen(val route: String, val label: String, val icon: Int) {
     object Home : Screen("home", "Home", R.drawable.home)
     object Settings : Screen("settings", "Settings", R.drawable.cogwheel)
+    object AI : Screen("ai", "AI", R.drawable.chatbot)
 }
 
 
@@ -34,7 +35,7 @@ sealed class Screen(val route: String, val label: String, val icon: Int) {
 @Composable
 fun MainPage(){
     val navController = rememberNavController()
-    val items = listOf(Screen.Home, Screen.Settings)
+    val items = listOf(Screen.Home, Screen.Settings, Screen.AI)
 
     Scaffold(
         bottomBar = {
@@ -85,6 +86,16 @@ fun MainPage(){
                 popExitTransition = { slideOutHorizontally { it } + fadeOut() }
             ) {
                 SettingsPage()
+            }
+
+            composable(
+                route = Screen.AI.route,
+                enterTransition = { slideInHorizontally { it } + fadeIn() },
+                exitTransition = { slideOutHorizontally { -it } + fadeOut() },
+                popEnterTransition = { slideInHorizontally { -it } + fadeIn() },
+                popExitTransition = { slideOutHorizontally { it } + fadeOut() }
+            ) {
+                AIScreen()
             }
         }
     }
