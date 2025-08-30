@@ -35,7 +35,7 @@ def predict_intent(text):
     return predicted_class, output_data
 
 labels = ["change_email", "change_threshold", "disable_alerts", "enable_alerts", "other"]  # same order as training
-text = "can you change the number of failed attempts to 5"
+text = "what is the name of long sightedness"
 predicted_class, output_probs = predict_intent(text)
 print("Predicted label:", labels[predicted_class])
 print("Probabilities:", output_probs)

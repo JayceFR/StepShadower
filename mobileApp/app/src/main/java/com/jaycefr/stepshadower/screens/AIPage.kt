@@ -261,13 +261,14 @@ fun loadModelFile(context: Context, modelPath: String): MappedByteBuffer {
     return fileChannel.map(FileChannel.MapMode.READ_ONLY, fileDescriptor.startOffset, fileDescriptor.declaredLength)
 }
 
-fun predictIntent(context: Context, text: String): String {
+fun predictIntent(context: Context, text: String, minConfidence: Float = 0.6f): String {
     val labels = listOf("change_email", "change_threshold", "disable_alerts", "enable_alerts", "other")
     val vocab = mutableMapOf<String, Int>()
     context.assets.open("vocab.txt").bufferedReader().useLines { lines ->
         var idx = 1
         lines.forEach { word -> vocab[word] = idx++ }
     }
+
     val maxLen = 20
     val tokens = text.lowercase().replace(Regex("[^\\w\\s]"), "").split(" ")
     val seq = IntArray(maxLen) { 0 }
@@ -280,7 +281,10 @@ fun predictIntent(context: Context, text: String): String {
 
     val probs = output[0]
     val maxIdx = probs.indices.maxByOrNull { probs[it] } ?: 0
-    return labels[maxIdx]
+    val maxProb = probs[maxIdx]
+
+    // 👇 Fallback to "other" if confidence too low
+    return if (maxProb >= minConfidence) labels[maxIdx] else "other"
 }
 
 fun extractEmail(text: String, prefs: android.content.SharedPreferences): String? {
