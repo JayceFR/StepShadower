@@ -17,11 +17,11 @@ val localProperties = Properties().apply {
 val apiKey: String = localProperties.getProperty("API_KEY") ?: ""
 
 android {
-    namespace = "com.jaycefr.stepshadower"
+    namespace = "com.jaycefr.EyeSpy"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.jaycefr.stepshadower"
+        applicationId = "com.jaycefr.EyeSpy"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
