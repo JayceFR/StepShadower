@@ -61,12 +61,12 @@ class LockWatchService : LifecycleService(){
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startForegroundServiceNotification() : Notification{
-        val channelID = "lockwatch_channel"
-        val channel = NotificationChannel(channelID, "Lockwatch Service", NotificationManager.IMPORTANCE_LOW)
+        val channelID = "eyespy_channel"
+        val channel = NotificationChannel(channelID, "EyeSpy Service", NotificationManager.IMPORTANCE_LOW)
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(this, channelID)
-            .setContentTitle("Lockwatch Active")
+            .setContentTitle("EyeSpy Active")
             .setContentText("Monitoring")
             .setSmallIcon(R.drawable.ic_launcher_background)
             .build()
@@ -93,7 +93,7 @@ class LockWatchService : LifecycleService(){
             imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(this),
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                        Log.d("Lockwatch", "Photo Saved : ${photoFile.absolutePath}")
+                        Log.d("EyeSpy", "Photo Saved : ${photoFile.absolutePath}")
 
                         val prefs = applicationContext.getSharedPreferences("User", Context.MODE_PRIVATE)
                         val toEmail : String = prefs.getString("email", "").toString()
@@ -128,7 +128,7 @@ class LockWatchService : LifecycleService(){
                                         stopSelf()
                                     }
                                     else{
-                                        Log.d("Lockwatch", "Location not found")
+                                        Log.d("EyeSpy", "Location not found")
                                         val subject = "Intruder"
                                         val body = "Location not found"
                                         val photoFile = File(photoFile.absolutePath)
@@ -148,20 +148,20 @@ class LockWatchService : LifecycleService(){
                                 }
                         }
                         else{
-                            Log.d("Lockwatch", "Location permission not granted")
+                            Log.d("EyeSpy", "Location permission not granted")
                             stopSelf()
                         }
 
                     }
 
                     override fun onError(exception: ImageCaptureException) {
-                        Log.e("Lockwatch", "Photo Capture failed", exception)
+                        Log.e("EyeSpy", "Photo Capture failed", exception)
                         stopSelf()
                     }
                 })
         }, ContextCompat.getMainExecutor(this))
     }
-    
+
 
     fun getFreshAccessToken(
         context: Context,
