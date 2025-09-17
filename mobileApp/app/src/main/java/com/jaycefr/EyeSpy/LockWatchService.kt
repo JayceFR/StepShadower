@@ -16,6 +16,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
+import com.google.android.gms.auth.GoogleAuthUtil
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.Properties
@@ -32,6 +34,10 @@ import java.io.File
 import javax.activation.DataHandler
 import javax.activation.FileDataSource
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LockWatchService : LifecycleService(){
     private lateinit var cameraExecutor: ExecutorService
@@ -105,35 +111,38 @@ class LockWatchService : LifecycleService(){
                                             Longitude : $lon
                                             https://maps.google.com/?q=$lat,$lon
                                         """.trimIndent()
-                                        // Send the email here
-                                        val gmailUser = "jaycejefferson.vicious@gmail.com"
-                                        val appPassword = "oeml jwrb ngdd gsfd"
-//                                        val toEmail = "jaycejefferson31@gmail.com"
                                         val subject = "Intruder"
                                         val photoFile = File(photoFile.absolutePath)
-                                        analyzeFaceSummary(photoFile){
-                                            faceSummary ->
-                                            val body = """
-                                                Intruder detected 
-                                                
-                                                $faceSummary
-                                                
-                                                $locationText
-                                            """.trimIndent()
-                                            sendEmail(gmailUser, appPassword, toEmail, subject, body, photoFile)
+                                        val body = "Intruder detected\n$locationText"
+                                        getFreshAccessToken(applicationContext){ token ->
+                                            if (token != null){
+                                                sendEmailWithGmailApi(
+                                                    context = applicationContext,
+                                                    toEmail = toEmail,
+                                                    subject = subject,
+                                                    bodyText = body,
+                                                    attachmentFile = photoFile
+                                                )
+                                            }
                                         }
                                         stopSelf()
                                     }
                                     else{
                                         Log.d("Lockwatch", "Location not found")
-                                        // Send the email here
-                                        val gmailUser = "jaycejefferson.vicious@gmail.com"
-                                        val appPassword = "oeml jwrb ngdd gsfd"
-//                                        val toEmail = "jaycejefferson31@gmail.com"
                                         val subject = "Intruder"
                                         val body = "Location not found"
                                         val photoFile = File(photoFile.absolutePath)
-                                        sendEmail(gmailUser, appPassword, toEmail, subject, body, photoFile)
+                                        getFreshAccessToken(applicationContext){ token ->
+                                            if (token != null){
+                                                sendEmailWithGmailApi(
+                                                    context = applicationContext,
+                                                    toEmail = toEmail,
+                                                    subject = subject,
+                                                    bodyText = body,
+                                                    attachmentFile = photoFile
+                                                )
+                                            }
+                                        }
                                         stopSelf()
                                     }
                                 }
@@ -210,6 +219,115 @@ class LockWatchService : LifecycleService(){
             }
         }.start()
     }
+
+    fun getFreshAccessToken(
+        context: Context,
+        onTokenReceived: (String?) -> Unit
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val account = GoogleSignIn.getLastSignedInAccount(context)
+                if (account != null) {
+                    val scope = "oauth2:https://www.googleapis.com/auth/gmail.send"
+                    val token = GoogleAuthUtil.getToken(context, account.account!!, scope)
+                    withContext(Dispatchers.Main) {
+                        onTokenReceived(token)
+                    }
+                } else {
+                    Log.e("Token", "No signed-in account found")
+                    withContext(Dispatchers.Main) {
+                        onTokenReceived(null)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("Token", "Failed to get token", e)
+                withContext(Dispatchers.Main) {
+                    onTokenReceived(null)
+                }
+            }
+        }
+    }
+
+    fun sendEmailWithGmailApi(
+        context: Context,
+        toEmail: String,
+        subject: String,
+        bodyText: String,
+        attachmentFile: File?
+    ) {
+        val prefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+        val accessToken = prefs.getString("gmail_token", null)
+        val fromEmail = prefs.getString("gmail_email", null)
+
+        if (accessToken.isNullOrEmpty() || fromEmail.isNullOrEmpty()) {
+            Log.e("EmailAPI", "Missing access token or email")
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Create MIME message manually
+                val boundary = "boundary_${System.currentTimeMillis()}"
+                val sb = StringBuilder()
+                sb.append("From: $fromEmail\r\n")
+                sb.append("To: $toEmail\r\n")
+                sb.append("Subject: $subject\r\n")
+                sb.append("MIME-Version: 1.0\r\n")
+                sb.append("Content-Type: multipart/mixed; boundary=\"$boundary\"\r\n")
+                sb.append("\r\n")
+
+                // Body part
+                sb.append("--$boundary\r\n")
+                sb.append("Content-Type: text/plain; charset=UTF-8\r\n\r\n")
+                sb.append(bodyText).append("\r\n")
+
+                // Attachment part
+                if (attachmentFile != null && attachmentFile.exists()) {
+                    val imageBytes = attachmentFile.readBytes()
+                    val base64Image = android.util.Base64.encodeToString(imageBytes, android.util.Base64.NO_WRAP)
+
+                    sb.append("--$boundary\r\n")
+                    sb.append("Content-Type: image/jpeg\r\n")
+                    sb.append("Content-Transfer-Encoding: base64\r\n")
+                    sb.append("Content-Disposition: attachment; filename=\"${attachmentFile.name}\"\r\n\r\n")
+                    sb.append(base64Image).append("\r\n")
+                }
+
+                sb.append("--$boundary--")
+
+                // Encode entire MIME message
+                val rawMessage = android.util.Base64.encodeToString(
+                    sb.toString().toByteArray(),
+                    android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP
+                )
+
+                // Create JSON payload
+                val jsonBody = """
+                {
+                    "raw": "$rawMessage"
+                }
+            """.trimIndent()
+
+                val url = java.net.URL("https://gmail.googleapis.com/gmail/v1/users/me/messages/send")
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.doOutput = true
+
+                conn.outputStream.use {
+                    it.write(jsonBody.toByteArray())
+                }
+
+                val responseCode = conn.responseCode
+                val responseMsg = conn.inputStream.bufferedReader().readText()
+                Log.d("EmailAPI", "Response $responseCode: $responseMsg")
+            } catch (e: Exception) {
+                Log.e("EmailAPI", "Failed to send email", e)
+            }
+        }
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()
