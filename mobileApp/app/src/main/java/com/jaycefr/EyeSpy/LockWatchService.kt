@@ -161,64 +161,7 @@ class LockWatchService : LifecycleService(){
                 })
         }, ContextCompat.getMainExecutor(this))
     }
-
-    fun sendEmail(
-        userEmail: String,
-        userPassword: String,
-        toEmail: String,
-        subject: String,
-        bodyText: String,
-        attachmentFile: File? = null
-    ) {
-        Thread {
-            try {
-                val props = Properties().apply {
-                    put("mail.smtp.host", "smtp.gmail.com")
-                    put("mail.smtp.port", "587")
-                    put("mail.smtp.auth", "true")
-                    put("mail.smtp.starttls.enable", "true")
-                }
-
-                val session = Session.getInstance(props, object : Authenticator() {
-                    override fun getPasswordAuthentication(): PasswordAuthentication {
-                        return PasswordAuthentication(userEmail, userPassword)
-                    }
-                })
-
-                val message = MimeMessage(session).apply {
-                    setFrom(InternetAddress(userEmail))
-                    setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail))
-                    setSubject(subject)
-
-                    if (attachmentFile != null && attachmentFile.exists()) {
-                        val multipart = MimeMultipart()
-
-                        // Body part
-                        val textPart = MimeBodyPart().apply {
-                            setText(bodyText)
-                        }
-                        multipart.addBodyPart(textPart)
-
-                        // Attachment part
-                        val attachmentPart = MimeBodyPart().apply {
-                            dataHandler = DataHandler(FileDataSource(attachmentFile))
-                            fileName = attachmentFile.name
-                        }
-                        multipart.addBodyPart(attachmentPart)
-
-                        setContent(multipart)
-                    } else {
-                        setText(bodyText)
-                    }
-                }
-                Transport.send(message)
-                println("Email sent successfully")
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }.start()
-    }
+    
 
     fun getFreshAccessToken(
         context: Context,
