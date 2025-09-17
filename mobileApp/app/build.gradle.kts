@@ -62,6 +62,11 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += setOf("META-INF/NOTICE.md", "META-INF/LICENSE.md")
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
         }
     }
     buildFeatures{
@@ -130,4 +135,9 @@ dependencies {
 
     // Networking
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+    // Google sign in
+    implementation("com.google.api-client:google-api-client-android:1.33.0")
+    implementation("com.google.apis:google-api-services-gmail:v1-rev110-1.25.0")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 }
