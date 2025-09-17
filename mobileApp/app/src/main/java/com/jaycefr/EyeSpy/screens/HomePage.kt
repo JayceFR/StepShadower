@@ -45,7 +45,7 @@ import java.net.URL
 @Composable
 fun HomePage() {
     val context = LocalContext.current
-    val activity = context as? Activity ?: return
+
 
     val photos by remember { mutableStateOf(getIntruderPhotos(context)) }
     val count = photos.size
@@ -55,39 +55,6 @@ fun HomePage() {
     val trialDaysLeft = remember { 7 } // Example value
 
     val RC_SIGN_IN = 1001
-
-    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestEmail()
-        .requestScopes(Scope("https://www.googleapis.com/auth/gmail.send"))
-        .build()
-    val googleSignInClient = GoogleSignIn.getClient(activity, gso)
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        if (task.isSuccessful) {
-            val account = task.result
-            val email = account?.email
-
-            if (email != null && account != null) {
-                val prefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
-                prefs.edit { putString("gmail_email", email) }
-
-                // ✅ Get OAuth token
-                getAccessToken(context, account) { token ->
-                    if (token != null) {
-                        prefs.edit { putString("gmail_token", token) } // Save token
-                        Toast.makeText(context, "Token acquired for $email", Toast.LENGTH_SHORT).show()
-                        Log.d("AuthToken", "Access token: $token")
-                        sendEmail(token, email)
-                    } else {
-                        Toast.makeText(context, "Failed to get access token", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        } else {
-            Log.e("SignIn", "Sign-in failed", task.exception)
-        }
-    }
-
 
     MaterialTheme {
         Column(
@@ -103,19 +70,6 @@ fun HomePage() {
                 lockSize = 320.dp,
                 locked = true
             )
-
-            Button(
-                onClick = {
-                    val signInIntent = googleSignInClient.signInIntent
-                    launcher.launch(signInIntent)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                Text(text = "Sign in")
-            }
-
 
             // First row of stats
             Row(
@@ -265,71 +219,6 @@ fun extractTimestamp(fileName: String): String {
         sdf.format(Date(millis))
     } catch (e: Exception) {
         "Unknown time"
-    }
-}
-
-fun getAccessToken(
-    context: Context,
-    account: GoogleSignInAccount,
-    scope: String = "https://www.googleapis.com/auth/gmail.send",
-    onTokenReceived: (String?) -> Unit
-) {
-    CoroutineScope(Dispatchers.IO).launch {
-        try {
-            val token = GoogleAuthUtil.getToken(
-                context,
-                account.account!!,
-                "oauth2:$scope"
-            )
-            withContext(Dispatchers.Main) {
-                onTokenReceived(token)
-            }
-        } catch (e: Exception) {
-            Log.e("Auth", "Failed to get token", e)
-            withContext(Dispatchers.Main) {
-                onTokenReceived(null)
-            }
-        }
-    }
-}
-
-fun sendEmail(accessToken: String, fromEmail: String) {
-    CoroutineScope(Dispatchers.IO).launch {
-        try {
-            val to = "jaycejefferson.vicious@gmail.com"
-            val subject = "Intruder Alert"
-            val body = "There have been intrusions detected."
-
-            val message = """
-                From: $fromEmail
-                To: $to
-                Subject: $subject
-
-                $body
-            """.trimIndent()
-
-            val encodedEmail = Base64.encodeToString(message.toByteArray(), Base64.NO_WRAP or Base64.URL_SAFE)
-
-            val json = JSONObject()
-            json.put("raw", encodedEmail)
-
-            val url = URL("https://gmail.googleapis.com/gmail/v1/users/me/messages/send")
-            val conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.doOutput = true
-
-            conn.outputStream.use { os ->
-                val input = json.toString().toByteArray()
-                os.write(input, 0, input.size)
-            }
-
-            val responseCode = conn.responseCode
-            Log.d("GmailAPI", "Email send response: $responseCode")
-        } catch (e: Exception) {
-            Log.e("GmailAPI", "Failed to send email", e)
-        }
     }
 }
 
