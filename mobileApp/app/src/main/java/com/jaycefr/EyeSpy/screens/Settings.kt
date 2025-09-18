@@ -117,5 +117,37 @@ fun SettingsPage() {
         ) {
             Text("Save Settings")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- Clear intruder data button ---
+        OutlinedButton(
+            onClick = {
+                val deleted = clearIntruderPhotos(context)
+                Toast.makeText(
+                    context,
+                    if (deleted) "🗑️ All intruder photos deleted" else "No photos found",
+                    Toast.LENGTH_SHORT
+                ).show()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            )
+        ) {
+            Text("Clear All Intruder Data")
+        }
     }
+}
+
+// Deletes all intruder photos from the app's filesDir
+fun clearIntruderPhotos(context: Context): Boolean {
+    val dir = context.filesDir
+    val intruderFiles = dir.listFiles { file ->
+        file.name.startsWith("intruder_") && file.name.endsWith(".jpg")
+    } ?: return false
+
+    intruderFiles.forEach { it.delete() }
+    return intruderFiles.isNotEmpty()
 }

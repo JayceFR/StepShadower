@@ -2,6 +2,7 @@ package com.jaycefr.EyeSpy.screens
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import java.io.File
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -25,9 +26,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.FileProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -210,10 +215,10 @@ fun StatCard(
 
 @Composable
 fun IntruderPhotoRow(file: File) {
+    val context = LocalContext.current
     val bitmap = remember(file) { BitmapFactory.decodeFile(file.absolutePath) }
     val timestamp = extractTimestamp(file.name)
 
-    // state to control popup
     var showPopup by remember { mutableStateOf(false) }
 
     Row(
@@ -235,48 +240,72 @@ fun IntruderPhotoRow(file: File) {
 
         Column {
             Text(text = "Captured at:", style = MaterialTheme.typography.labelSmall)
-            Text(
-                text = timestamp,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Text(text = timestamp, style = MaterialTheme.typography.bodyMedium)
         }
     }
 
-    // Fullscreen popup dialog
+    // Square popup dialog with share + close buttons
     if (showPopup && bitmap != null) {
         Dialog(onDismissRequest = { showPopup = false }) {
-            Box(
+            Card(
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f)),
-                contentAlignment = Alignment.Center
+                    .size(300.dp) // 👈 square size
+                    .padding(16.dp)
             ) {
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = "Enlarged intruder photo",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentScale = ContentScale.Fit
-                )
-
-                // Close button
-                IconButton(
-                    onClick = { showPopup = false },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.cogwheel),
-                        contentDescription = "Close",
-                        tint = MaterialTheme.colorScheme.onBackground
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = "Intruder photo enlarged",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
+
+                    // Top-right buttons
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        IconButton(onClick = { // Share intent
+                            val uri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.provider", // 👈 update your provider authority
+                                file
+                            )
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "image/*"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(
+                                Intent.createChooser(shareIntent, "Share Intruder Photo")
+                            )
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        IconButton(onClick = { showPopup = false }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
+
 
 
 fun getIntruderPhotos(context: Context): List<File> {
