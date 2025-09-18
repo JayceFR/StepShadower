@@ -34,6 +34,7 @@ import java.io.File
 import javax.activation.DataHandler
 import javax.activation.FileDataSource
 import com.google.android.gms.location.LocationServices
+import com.google.api.client.auth.oauth.OAuthGetAccessToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -121,8 +122,12 @@ class LockWatchService : LifecycleService(){
                                                     toEmail = toEmail,
                                                     subject = subject,
                                                     bodyText = body,
+                                                    accessToken = token,
                                                     attachmentFile = photoFile
                                                 )
+                                            }
+                                            else{
+                                                Log.d("EyeSpy", "Token returned is null")
                                             }
                                         }
                                         stopSelf()
@@ -139,8 +144,12 @@ class LockWatchService : LifecycleService(){
                                                     toEmail = toEmail,
                                                     subject = subject,
                                                     bodyText = body,
+                                                    accessToken = token,
                                                     attachmentFile = photoFile
                                                 )
+                                            }
+                                            else{
+                                                Log.d("EyeSpy", "Token returned is null")
                                             }
                                         }
                                         stopSelf()
@@ -196,10 +205,11 @@ class LockWatchService : LifecycleService(){
         toEmail: String,
         subject: String,
         bodyText: String,
+        accessToken: String,
         attachmentFile: File?
     ) {
         val prefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
-        val accessToken = prefs.getString("gmail_token", null)
+//        val accessToken = prefs.getString("gmail_token", null)
         val fromEmail = prefs.getString("gmail_email", null)
 
         if (accessToken.isNullOrEmpty() || fromEmail.isNullOrEmpty()) {
