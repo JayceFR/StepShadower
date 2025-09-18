@@ -1,6 +1,8 @@
 package com.jaycefr.EyeSpy.screens
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -10,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.jaycefr.EyeSpy.MainActivity
 
 @Composable
 fun SettingsPage() {
@@ -138,6 +143,54 @@ fun SettingsPage() {
         ) {
             Text("Clear All Intruder Data")
         }
+
+        // --- Delete Account button ---
+        OutlinedButton(
+            onClick = {
+                deleteAccount(context)
+                Toast.makeText(context, "❌ Account deleted", Toast.LENGTH_SHORT).show()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            )
+        ) {
+            Text("Delete My Account")
+        }
+    }
+}
+
+fun deleteAccount(context: Context) {
+    val prefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+
+    // 1. Clear stored user data
+    prefs.edit().clear().apply()
+
+    // 2. Sign out from Google
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestEmail()
+        .requestScopes(com.google.android.gms.common.api.Scope("https://www.googleapis.com/auth/gmail.send"))
+        .build()
+    val googleSignInClient = GoogleSignIn.getClient(context, gso)
+    googleSignInClient.signOut()
+
+    // 3. Revoke access (optional, ensures tokens are invalidated)
+    googleSignInClient.revokeAccess()
+
+    // 4. Remove runtime permissions (not automatic, user must re-grant if needed)
+    // Best you can do is trigger request again on onboarding.
+    // But you can redirect user to app settings if you want:
+    // val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+    // intent.data = Uri.fromParts("package", context.packageName, null)
+    // context.startActivity(intent)
+
+    // 5. Redirect to onboarding (if inside an Activity)
+    if (context is Activity) {
+        context.finishAffinity() // clears back stack
+        context.startActivity(
+            Intent(context, MainActivity::class.java) // or your launcher activity
+        )
     }
 }
 
