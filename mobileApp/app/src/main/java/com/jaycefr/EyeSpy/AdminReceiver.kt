@@ -70,7 +70,7 @@ class AdminReceiver : DeviceAdminReceiver() {
         if (failedCount >= allowedFailAttempts) {
             Toast.makeText(context, "$allowedFailAttempts failed attempts detected", Toast.LENGTH_SHORT).show()
             Log.d("AdminReceiver", "$allowedFailAttempts failed attempts detected")
-            showNotification(context, "$allowedFailAttempts failed attempts detected")
+//            showNotification(context, "$allowedFailAttempts failed attempts detected")
 
             val serviceIntent = Intent(context, LockWatchService::class.java)
             context.startForegroundService(serviceIntent)
