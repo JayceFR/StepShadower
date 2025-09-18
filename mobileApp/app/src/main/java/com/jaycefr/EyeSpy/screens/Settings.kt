@@ -26,6 +26,8 @@ fun SettingsPage() {
     var attempts by remember { mutableStateOf(prefs.getInt("attempts", 3)) }
     var isActive by remember { mutableStateOf(prefs.getBoolean("activated", true)) }
 
+    var showTerms by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -37,6 +39,33 @@ fun SettingsPage() {
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 24.dp)
         )
+
+        OutlinedButton(
+            onClick = { showTerms = true },
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large
+        ) {
+            Text("📜 Terms & Conditions")
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (showTerms) {
+            AlertDialog(
+                onDismissRequest = { showTerms = false },
+                title = { Text("Terms & Conditions") },
+                text = {
+                    Text(
+                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { showTerms = false }) {
+                        Text("Close")
+                    }
+                }
+            )
+        }
 
         // --- Activation Toggle ---
         Card(
