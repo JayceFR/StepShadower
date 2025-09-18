@@ -35,7 +35,7 @@ import kotlin.math.sin
 @Composable
 fun LockWith3DOrbits(
     modifier: Modifier = Modifier,
-    locked: Boolean = true,
+    locked: Boolean = false,
     lockColor: Color = Color(0xFFF4F4F4), // light body for white bg
     accent: Color = Color(0xFF3B82F6),    // blue orbit
     accent2: Color = Color(0xFF8B5CF6),   // purple orbit
@@ -96,9 +96,13 @@ fun LockWith3DOrbits(
             drawOrbitDotIfHalf(cx, cy, rx2, ry2, tilt2, t2, accent2, isFront = false, minDim)
 
             val glowRadius = minDim * 0.55f
+            var color = accent.copy(alpha = 0.3f)
+            if (!locked){
+                color = Color(0xFFF63B3B).copy(alpha = 0.3f)
+            }
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(accent.copy(alpha = 0.2f), Color.Transparent),
+                    colors = listOf(color, Color.Transparent),
                     center = Offset(cx, cy),
                     radius = glowRadius
                 ),
@@ -249,8 +253,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawLock(
     } else {
         // unlocked shackle: rotate slightly left + lifted
         withTransform({
-            translate(left = -bodyW * 0.25f, top = -bodyH * 0.2f)
-            rotate(degrees = -25f, pivot = Offset(cx, cy))
+            rotate(degrees = 180f, pivot = Offset(cx, cy))
         }) {
             drawArc(
                 color = Color.DarkGray,

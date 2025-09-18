@@ -57,10 +57,17 @@ fun HomePage() {
 
     var photos by remember { mutableStateOf(getIntruderPhotos(context)) }
 
+    val locked = remember {
+        mutableStateOf(
+            context.getSharedPreferences("User", Context.MODE_PRIVATE).getBoolean("activated", false)
+        )
+    }
+
     // 🔁 Refresh photos every 5 seconds
     LaunchedEffect(Unit) {
         while (true) {
             photos = getIntruderPhotos(context)
+            locked.value = context.getSharedPreferences("User", Context.MODE_PRIVATE).getBoolean("activated", false)
             kotlinx.coroutines.delay(5000)
         }
     }
@@ -107,7 +114,7 @@ fun HomePage() {
                 modifier = Modifier
                     .fillMaxWidth(),
                 lockSize = 260.dp,
-                locked = true
+                locked = locked.value
             )
 
             // Stats row
