@@ -21,11 +21,13 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.window.Dialog
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -211,6 +213,9 @@ fun IntruderPhotoRow(file: File) {
     val bitmap = remember(file) { BitmapFactory.decodeFile(file.absolutePath) }
     val timestamp = extractTimestamp(file.name)
 
+    // state to control popup
+    var showPopup by remember { mutableStateOf(false) }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -220,7 +225,8 @@ fun IntruderPhotoRow(file: File) {
                 bitmap = it.asImageBitmap(),
                 contentDescription = "Intruder photo",
                 modifier = Modifier
-                    .size(100.dp),
+                    .size(100.dp)
+                    .clickable { showPopup = true }, // 👈 tap to show popup
                 contentScale = ContentScale.Crop
             )
         }
@@ -235,7 +241,43 @@ fun IntruderPhotoRow(file: File) {
             )
         }
     }
+
+    // Fullscreen popup dialog
+    if (showPopup && bitmap != null) {
+        Dialog(onDismissRequest = { showPopup = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Enlarged intruder photo",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentScale = ContentScale.Fit
+                )
+
+                // Close button
+                IconButton(
+                    onClick = { showPopup = false },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.cogwheel),
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
+    }
 }
+
 
 fun getIntruderPhotos(context: Context): List<File> {
     val dir = context.filesDir
