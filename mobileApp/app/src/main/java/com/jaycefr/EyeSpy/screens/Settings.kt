@@ -178,13 +178,6 @@ fun deleteAccount(context: Context) {
     // 3. Revoke access (optional, ensures tokens are invalidated)
     googleSignInClient.revokeAccess()
 
-    // 4. Remove runtime permissions (not automatic, user must re-grant if needed)
-    // Best you can do is trigger request again on onboarding.
-    // But you can redirect user to app settings if you want:
-    // val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-    // intent.data = Uri.fromParts("package", context.packageName, null)
-    // context.startActivity(intent)
-
     // 5. Redirect to onboarding (if inside an Activity)
     if (context is Activity) {
         context.finishAffinity() // clears back stack
