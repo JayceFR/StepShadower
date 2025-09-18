@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import android.graphics.BitmapFactory
@@ -22,7 +21,10 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.snapping.SnapPosition
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -46,37 +48,67 @@ import java.net.URL
 fun HomePage() {
     val context = LocalContext.current
 
+    var photos by remember { mutableStateOf(getIntruderPhotos(context)) }
 
-    val photos by remember { mutableStateOf(getIntruderPhotos(context)) }
+    // 🔁 Refresh photos every 5 seconds
+    LaunchedEffect(Unit) {
+        while (true) {
+            photos = getIntruderPhotos(context)
+            kotlinx.coroutines.delay(5000)
+        }
+    }
+
     val count = photos.size
-
-    // Pretend you save this when the app first arms
-    val armedSince = remember { System.currentTimeMillis() - 86400000L } // 1 day ago
     val trialDaysLeft = remember { 7 } // Example value
 
-    val RC_SIGN_IN = 1001
+    val name = remember {
+        mutableStateOf(
+            context.getSharedPreferences("User", Context.MODE_PRIVATE).getString("name", "")
+        )
+    }
+
+    // ⏰ Greeting based on time
+    val greeting = remember {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        when (hour) {
+            in 5..11 -> "Good morning"
+            in 12..16 -> "Good afternoon"
+            in 17..21 -> "Good evening"
+            else -> "Hello"
+        }
+    }
 
     MaterialTheme {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
+                .padding(20.dp), // a bit more breathing room
+            verticalArrangement = Arrangement.Top
         ) {
+            // Greeting section
+            Text(
+                text = "$greeting, ${name.value}",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 4.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            // Lock animation
             LockWith3DOrbits(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                lockSize = 320.dp,
+                    .fillMaxWidth(),
+                lockSize = 260.dp,
                 locked = true
             )
 
-            // First row of stats
+            // Stats row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(bottom = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 StatCard(
                     title = "Intruders detected",
@@ -93,18 +125,20 @@ fun HomePage() {
                 )
             }
 
-
-            // Photo list below stats
+            // Photos
             if (photos.isNotEmpty()) {
                 Text(
-                    text = "Intruders",
+                    text = "📸 Intruder photos",
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
 
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
+//                    verticalArrangement = Arrangement.spacedBy(12.dp),
+//                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(photos) { file ->
                         IntruderPhotoRow(file)
@@ -112,15 +146,16 @@ fun HomePage() {
                 }
             } else {
                 Text(
-                    text = "No intruder photos yet",
+                    text = "No intruder photos yet 👌",
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(top = 16.dp)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                    modifier = Modifier.padding(top = 24.dp)
                 )
             }
         }
     }
-
 }
+
 
 @Composable
 fun StatCard(

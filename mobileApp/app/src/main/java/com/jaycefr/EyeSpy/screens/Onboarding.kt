@@ -129,6 +129,7 @@ fun OnboardingScreen(
             if (email != null && account != null) {
                 val prefs = context.getSharedPreferences("User", Context.MODE_PRIVATE)
                 prefs.edit { putString("gmail_email", email) }
+                prefs.edit { putString("name", account.displayName)}
 
                 getAccessToken(context, account) { token ->
                     if (token != null) {
