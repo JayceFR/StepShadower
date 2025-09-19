@@ -112,7 +112,7 @@ class LockWatchService : LifecycleService(){
                                             Longitude : $lon
                                             https://maps.google.com/?q=$lat,$lon
                                         """.trimIndent()
-                                        val subject = "Intruder"
+                                        val subject = "EyeSpy: Intruder"
                                         val photoFile = File(photoFile.absolutePath)
                                         val body = "Intruder detected\n$locationText"
                                         getFreshAccessToken(applicationContext){ token ->
@@ -133,7 +133,7 @@ class LockWatchService : LifecycleService(){
                                         stopSelf()
                                     }
                                     else{
-                                        Log.d("EyeSpy", "Location not found")
+                                        Log.d("EyeSpy: Intruder", "Location not found")
                                         val subject = "Intruder"
                                         val body = "Location not found"
                                         val photoFile = File(photoFile.absolutePath)
