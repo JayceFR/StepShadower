@@ -58,6 +58,8 @@ fun AIPage() {
     // Dialog states
     var showThresholdDialog by remember { mutableStateOf(false) }
     var showEmailDialog by remember { mutableStateOf(false) }
+    var showClearData by remember { mutableStateOf(false) }
+    var showDeleteAccount by remember { mutableStateOf(false) }
 
     // Dialog inputs
     var newThreshold by remember { mutableStateOf("") }
@@ -136,6 +138,14 @@ fun AIPage() {
                                 prefs.edit { putBoolean("activated", false) }
                                 messages.add("🚫 Alerts are now disabled." to false)
                             }
+                            "clear_intruder_data" -> {
+                                showClearData = true
+                                messages.add("Ok lets delete all the intruders data." to false)
+                            }
+                            "delete_account" -> {
+                                showDeleteAccount = true
+                                messages.add("Ok lets delete your account." to false)
+                            }
                             "other" -> {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     val aiReply = getAIResponse(currentMessage)
@@ -151,6 +161,46 @@ fun AIPage() {
                 Icon(Icons.Filled.Send, contentDescription = "Send", tint = MaterialTheme.colorScheme.primary)
             }
         }
+    }
+
+    if (showClearData){
+        AlertDialog(
+            onDismissRequest = { showClearData = false },
+            title = { Text("Clear intruder data") },
+            text = {
+                Text("Are you sure you want to clear all intruder data?")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    clearIntruderPhotos(context)
+                    showClearData = false
+                    messages.add("I have cleared all intruder data successfully" to false)
+                }) { Text("Confirm") }
+            },
+            dismissButton = {
+                Button(onClick = { showClearData = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showDeleteAccount){
+        AlertDialog(
+            onDismissRequest = { showDeleteAccount = false },
+            title = { Text("Delete my account") },
+            text = {
+                Text("Are you sure you want to delete your account?")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    deleteAccount(context)
+                    showDeleteAccount = false
+                    messages.add("I have deleted your account successfully" to false)
+                }) { Text("Confirm") }
+            },
+            dismissButton = {
+                Button(onClick = { showDeleteAccount = false }) { Text("Cancel") }
+            }
+        )
     }
 
     if (showThresholdDialog) {
@@ -261,7 +311,7 @@ fun loadModelFile(context: Context, modelPath: String): MappedByteBuffer {
 }
 
 fun predictIntent(context: Context, text: String, minConfidence: Float = 0.6f): String {
-    val labels = listOf("change_email", "change_threshold", "disable_alerts", "enable_alerts", "other")
+    val labels = listOf("change_email", "change_threshold", "disable_alerts", "enable_alerts", "clear_intruder_data", "delete_account", "other")
     val vocab = mutableMapOf<String, Int>()
     context.assets.open("vocab.txt").bufferedReader().useLines { lines ->
         var idx = 1

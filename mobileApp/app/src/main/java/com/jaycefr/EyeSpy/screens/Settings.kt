@@ -26,6 +26,9 @@ fun SettingsPage() {
     var attempts by remember { mutableIntStateOf(prefs.getInt("numberOfFailedAttempts", 3)) }
     var isActive by remember { mutableStateOf(prefs.getBoolean("activated", true)) }
 
+    var showClearData by remember { mutableStateOf(false) }
+    var showDeleteAccount by remember { mutableStateOf(false) }
+
     var showTerms by remember { mutableStateOf(false) }
 
     Column(
@@ -63,6 +66,50 @@ fun SettingsPage() {
                     TextButton(onClick = { showTerms = false }) {
                         Text("Close")
                     }
+                }
+            )
+        }
+
+        if (showClearData){
+            AlertDialog(
+                onDismissRequest = { showClearData = false },
+                title = { Text("Clear intruder data") },
+                text = {
+                    Text("Are you sure you want to clear all intruder data?")
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        val deleted = clearIntruderPhotos(context)
+                        Toast.makeText(
+                            context,
+                            if (deleted) "🗑️ All intruder photos deleted" else "No photos found",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        showClearData = false
+                    }) { Text("Confirm") }
+                },
+                dismissButton = {
+                    Button(onClick = { showClearData = false }) { Text("Cancel") }
+                }
+            )
+        }
+
+        if (showDeleteAccount){
+            AlertDialog(
+                onDismissRequest = { showDeleteAccount = false },
+                title = { Text("Delete my account") },
+                text = {
+                    Text("Are you sure you want to delete your account?")
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        deleteAccount(context)
+                        Toast.makeText(context, "❌ Account deleted", Toast.LENGTH_SHORT).show()
+                        showDeleteAccount = false
+                    }) { Text("Confirm") }
+                },
+                dismissButton = {
+                    Button(onClick = { showDeleteAccount = false }) { Text("Cancel") }
                 }
             )
         }
@@ -157,12 +204,7 @@ fun SettingsPage() {
         // --- Clear intruder data button ---
         OutlinedButton(
             onClick = {
-                val deleted = clearIntruderPhotos(context)
-                Toast.makeText(
-                    context,
-                    if (deleted) "🗑️ All intruder photos deleted" else "No photos found",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showClearData = true
             },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
@@ -176,8 +218,7 @@ fun SettingsPage() {
         // --- Delete Account button ---
         OutlinedButton(
             onClick = {
-                deleteAccount(context)
-                Toast.makeText(context, "❌ Account deleted", Toast.LENGTH_SHORT).show()
+                showDeleteAccount = true
             },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
