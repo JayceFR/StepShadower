@@ -43,15 +43,6 @@ fun SettingsPage() {
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
-        OutlinedButton(
-            onClick = { showTerms = true },
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large
-        ) {
-            Text("📜 Terms & Conditions")
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-
         if (showTerms) {
             AlertDialog(
                 onDismissRequest = { showTerms = false },
@@ -200,6 +191,15 @@ fun SettingsPage() {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = { showTerms = true },
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large
+        ) {
+            Text("📜 Terms & Conditions")
+        }
+        Spacer(modifier = Modifier.height(24.dp))
 
         // --- Clear intruder data button ---
         OutlinedButton(
