@@ -34,8 +34,8 @@ def predict_intent(text):
     predicted_class = np.argmax(output_data)
     return predicted_class, output_data
 
-labels = ["change_email", "change_threshold", "disable_alerts", "enable_alerts", "other"]  # same order as training
-text = "what is the name of long sightedness"
+labels = ["change_email", "change_threshold", "disable_alerts", "enable_alerts", "CLEAR_INTRUDER_DATA", "DELETE_ACCOUNT", "other"]  # same order as training
+text = "can you delete my account please"
 predicted_class, output_probs = predict_intent(text)
 print("Predicted label:", labels[predicted_class])
 print("Probabilities:", output_probs)
