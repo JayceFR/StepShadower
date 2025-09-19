@@ -30,8 +30,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -226,7 +228,7 @@ fun IntruderPhotoRow(file: File) {
     val bitmap = remember(file) { BitmapFactory.decodeFile(file.absolutePath) }
     val timestamp = extractTimestamp(file.name)
 
-    var showPopup by remember { mutableStateOf(false) }
+    var showFullScreen by remember { mutableStateOf(false) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -238,7 +240,7 @@ fun IntruderPhotoRow(file: File) {
                 contentDescription = "Intruder photo",
                 modifier = Modifier
                     .size(100.dp)
-                    .clickable { showPopup = true }, // 👈 tap to show popup
+                    .clickable { showFullScreen = true }, // 👈 tap to show fullscreen
                 contentScale = ContentScale.Crop
             )
         }
@@ -251,67 +253,66 @@ fun IntruderPhotoRow(file: File) {
         }
     }
 
-    // Square popup dialog with share + close buttons
-    if (showPopup && bitmap != null) {
-        Dialog(onDismissRequest = { showPopup = false }) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
+    // Fullscreen overlay like WhatsApp
+    if (showFullScreen && bitmap != null) {
+        Dialog(
+            onDismissRequest = { showFullScreen = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false) // 👈 fills screen
+        ) {
+            Box(
                 modifier = Modifier
-                    .size(300.dp) // 👈 square size
-                    .padding(16.dp)
+                    .fillMaxSize()
+                    .background(Color.Black),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Intruder photo enlarged",
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentScale = ContentScale.Fit // 👈 scale like WhatsApp
+                )
+
+                // Top-right action buttons
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
                 ) {
-                    Image(
-                        bitmap = bitmap.asImageBitmap(),
-                        contentDescription = "Intruder photo enlarged",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-
-                    // Top-right buttons
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                    ) {
-                        IconButton(onClick = { // Share intent
-                            val uri = FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.provider", // 👈 update your provider authority
-                                file
-                            )
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "image/*"
-                                putExtra(Intent.EXTRA_STREAM, uri)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-                            context.startActivity(
-                                Intent.createChooser(shareIntent, "Share Intruder Photo")
-                            )
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = "Share",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
+                    IconButton(onClick = {
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.provider",
+                            file
+                        )
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "image/*"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
+                        context.startActivity(
+                            Intent.createChooser(shareIntent, "Share Intruder Photo")
+                        )
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share",
+                            tint = Color.White
+                        )
+                    }
 
-                        IconButton(onClick = { showPopup = false }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Close",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
+                    IconButton(onClick = { showFullScreen = false }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color.White
+                        )
                     }
                 }
             }
         }
     }
 }
+
 
 
 
